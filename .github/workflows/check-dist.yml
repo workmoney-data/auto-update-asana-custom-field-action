@@ -59,7 +59,7 @@ jobs:
           prerelease: true
           title: 'Bleeding edge main branch build'
           files: |
-            dist/license.txt
-            dist/index.js
-            dist/index.js.map
-            dist/sourcemap-register.js
+            ./dist/license.txt
+            ./dist/index.js
+            ./dist/index.js.map
+            ./dist/sourcemap-register.js
