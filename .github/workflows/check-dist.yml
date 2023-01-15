@@ -3,7 +3,7 @@
 # `index.js` is the code that will run.
 # For our project, we generate this file through a build process from other source files.
 # We need to make sure the checked-in `index.js` actually matches what we expect it to be.
-name: Check dist/
+name: 'Check dist/ and release'
 
 on:
   push:
@@ -51,3 +51,12 @@ jobs:
         with:
           name: dist
           path: dist/
+
+      - uses: 'marvinpinto/action-automatic-releases@latest'
+        with:
+          repo_token: '${{ secrets.GITHUB_TOKEN }}'
+          automatic_release_tag: 'latest'
+          prerelease: true
+          title: 'Bleeding edge main branch build'
+          files: |
+            dist/*
