@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+
 import {wait} from './wait'
 
 async function run(): Promise<void> {
@@ -15,5 +16,7 @@ async function run(): Promise<void> {
     if (error instanceof Error) core.setFailed(error.message)
   }
 }
+
+console.log('Running Mergie...')
 
 run()
