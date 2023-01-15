@@ -53,6 +53,7 @@ function run() {
         }
     });
 }
+console.log('Running Mergie...');
 run();
 
 
