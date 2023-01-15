@@ -59,7 +59,7 @@ jobs:
           prerelease: true
           title: 'Development Build'
           files: |
-            dist/license.txt
+            dist/licenses.txt
             dist/index.js
             dist/index.js.map
             dist/sourcemap-register.js
