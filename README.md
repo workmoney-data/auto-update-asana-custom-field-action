@@ -9,6 +9,7 @@ The idea here is for this to be an incremental part of Mergie, rather than rewri
 Save your changes and commit the build artifacts:
 
 ```
+yarn build
 yarn package
 git commit -am "...change description"
 git push origin main
