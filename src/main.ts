@@ -24,6 +24,7 @@ async function run(): Promise<void> {
     )
 
     const mainBranchName = core.getInput('mainBranchName') || 'main'
+    core.debug(`Main branch name: ${mainBranchName}`)
 
     core.setOutput('time', new Date().toTimeString())
 
@@ -37,16 +38,52 @@ async function run(): Promise<void> {
       repo
     })
 
+    const skipPullRequestsWithLabels = core
+      .getInput('skipPullRequestsWithLabels')
+      .split(',')
+      .map(label => label.trim())
+    core.debug(`skipPullRequestsWithLabels: ${skipPullRequestsWithLabels}`)
+
+    const onlyMergeBranchesWithPrefixes = core
+      .getInput('onlyMergeBranchesWithPrefixes')
+      .split(',')
+      .map(label => label.trim())
+    core.debug(
+      `onlyMergeBranchesWithPrefixes: ${onlyMergeBranchesWithPrefixes}`
+    )
+
     for (const pullRequest of pullRequests.data) {
-      if (
-        pullRequest.labels.find(
-          label => label.name.toLowerCase() === 'dont_update'
-        )
-      ) {
+      const labelFoundThatMeansWeShouldSkipSync = pullRequest.labels.find(
+        label =>
+          skipPullRequestsWithLabels.find(
+            labelToSkip =>
+              labelToSkip.toLowerCase() === label.name.toLowerCase()
+          )
+      )
+      if (labelFoundThatMeansWeShouldSkipSync) {
         core.info(
-          `Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it has the label "dont_update".`
+          `Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it has the label "${labelFoundThatMeansWeShouldSkipSync}".`
         )
         continue
+      }
+
+      if (onlyMergeBranchesWithPrefixes.length > 0) {
+        const branchNameStartsWithPrefix = onlyMergeBranchesWithPrefixes.find(
+          prefix =>
+            pullRequest.head.ref.toLowerCase().startsWith(prefix.toLowerCase())
+        )
+        if (!branchNameStartsWithPrefix) {
+          core.info(
+            `Not merging in the main branch (${mainBranchName}) into head of PR #${
+              pullRequest.number
+            } (${
+              pullRequest.head.ref
+            }) because it does not start with one of the prefixes: ${JSON.stringify(
+              onlyMergeBranchesWithPrefixes
+            )}.`
+          )
+          continue
+        }
       }
 
       if (onlyMergeMainForDraftPullRequests && !pullRequest.draft) {
