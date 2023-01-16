@@ -78,7 +78,7 @@ function run() {
             for (const pullRequest of pullRequests.data) {
                 const labelFoundThatMeansWeShouldSkipSync = pullRequest.labels.find(label => skipPullRequestsWithLabels.find(labelToSkip => labelToSkip.toLowerCase() === label.name.toLowerCase()));
                 if (labelFoundThatMeansWeShouldSkipSync) {
-                    core.info(`Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it has the label "${labelFoundThatMeansWeShouldSkipSync}".`);
+                    core.info(`Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it has the label "${labelFoundThatMeansWeShouldSkipSync.name}".`);
                     continue;
                 }
                 if (onlyMergeBranchesWithPrefixes.length > 0) {
