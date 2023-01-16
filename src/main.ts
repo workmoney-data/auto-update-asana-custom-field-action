@@ -14,7 +14,9 @@ async function run(): Promise<void> {
       core.debug(new Date().toTimeString())
     }
 
-    const githubToken: string = core.getInput('githubToken')
+    const githubToken: string = core.getInput('githubToken', {
+      required: true
+    })
     if (!githubToken) {
       throw new Error('No github token provided')
     }
@@ -103,12 +105,16 @@ async function run(): Promise<void> {
           base: pullRequest.head.ref,
           head: mainBranchName
         })
+        core.info(
+          `Successfully merged the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}).`
+        )
       } catch (err) {
         if (err instanceof Error) {
           core.info(
-            "Couldn't automatically merge in the main branch into the PR head: this is often due to a merge conflict needing resolution."
+            `Couldn't automatically merge in the main branch into the PR head: this is often due to a merge conflict needing resolution. Error: ${err.message}`
           )
-          core.error(err)
+          // We intentionally don't log this as an error because that shows up as a red X in the GitHub UI, which is confusing because it's an expected outcome
+          // core.error(err)
           continue
         }
       }

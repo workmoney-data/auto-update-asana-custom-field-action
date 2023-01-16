@@ -48,7 +48,9 @@ function run() {
                 yield (0, wait_1.wait)(parseInt(ms, 10));
                 core.debug(new Date().toTimeString());
             }
-            const githubToken = core.getInput('githubToken');
+            const githubToken = core.getInput('githubToken', {
+                required: true
+            });
             if (!githubToken) {
                 throw new Error('No github token provided');
             }
@@ -98,11 +100,13 @@ function run() {
                         base: pullRequest.head.ref,
                         head: mainBranchName
                     });
+                    core.info(`Successfully merged the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}).`);
                 }
                 catch (err) {
                     if (err instanceof Error) {
-                        core.info("Couldn't automatically merge in the main branch into the PR head: this is often due to a merge conflict needing resolution.");
-                        core.error(err);
+                        core.info(`Couldn't automatically merge in the main branch into the PR head: this is often due to a merge conflict needing resolution. Error: ${err.message}`);
+                        // We intentionally don't log this as an error because that shows up as a red X in the GitHub UI, which is confusing because it's an expected outcome
+                        // core.error(err)
                         continue;
                     }
                 }

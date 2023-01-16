@@ -2,10 +2,31 @@ name: 'Your name here'
 description: 'Provide a description here'
 author: 'Your name or organization here'
 inputs:
-  milliseconds: # change this
+  githubToken:
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+    description: 'a scoped Github token which the action will use to operate on your Pull Requests, defiend in your action YML file as: githubToken: ${{ secrets.GITHUB_TOKEN }}'
+    default: 'main'
+  waitMilliseconds:
+    required: false
+    description: 'an optional forced wait time (in milliseconds) before this action runs'
+    default: '0'
+  mainBranchName:
+    required: false
+    description: 'the name of the main branch for your repo'
+    default: 'main'
+  onlyMergeMainForDraftPullRequests:
+    required: false
+    description: 'set to `true` if you'd like this action to only run on Pull Requests in the Draft state'
+    default: 'false'
+  onlyMergeBranchesWithPrefixes:
+    required: false
+    description: 'an optional comma-separated list of branch name prefixes. This action will only operate on Pull Requests whose branch names start with one of these prefixes.'
+    default: 'false'
+  skipPullRequestsWithLabels:
+    required: false
+    description: 'an optional comma-separated list of Pull Request labels required for this action to operate on a given Pull Request'
+    default: 'false'
+
 runs:
   using: 'node16'
   main: 'dist/index.js'
