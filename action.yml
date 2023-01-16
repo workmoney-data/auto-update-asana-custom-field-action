@@ -1,6 +1,6 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Auto-merge Main Branch Into Pull Requests'
+description: 'This action will helps your organization by automatically merging new commits to your main branch into open Pull Requests'
+author: 'Jonathan Sibley'
 inputs:
   githubToken:
     required: true
