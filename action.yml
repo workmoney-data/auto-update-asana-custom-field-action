@@ -16,7 +16,7 @@ inputs:
     default: 'main'
   onlyMergeMainForDraftPullRequests:
     required: false
-    description: 'set to `true` if you'd like this action to only run on Pull Requests in the Draft state'
+    description: 'set to `true` if you would like this action to only run on Pull Requests in the Draft state'
     default: 'false'
   onlyMergeBranchesWithPrefixes:
     required: false
