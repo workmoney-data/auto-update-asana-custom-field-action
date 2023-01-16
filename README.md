@@ -40,6 +40,3 @@ jobs:
       - uses: "sprucehealth/mergie-action@latest"
 ```
 
-## What is this code based on?
-
-This boilerplate project: https://github.com/NickLiffen/actions-boilerplate
