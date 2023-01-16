@@ -3,8 +3,6 @@ import * as github from '@actions/github'
 
 import {wait} from './wait'
 
-const MainBranchName = 'main'
-
 async function run(): Promise<void> {
   try {
     const ms: string = core.getInput('waitMilliseconds')
@@ -25,6 +23,8 @@ async function run(): Promise<void> {
       'onlyMergeMainForDraftPullRequests'
     )
 
+    const mainBranchName = core.getInput('mainBranchName') || 'main'
+
     core.setOutput('time', new Date().toTimeString())
 
     const octokit = github.getOctokit(githubToken)
@@ -32,23 +32,28 @@ async function run(): Promise<void> {
     const repoOwner = github.context.repo.owner
     const repo = github.context.repo.repo
 
-    const pullRequestAbridged = github.context.payload.pull_request
-    if (pullRequestAbridged) {
-      const pullRequest = await octokit.rest.pulls.get({
-        owner: repoOwner,
-        repo,
-        pull_number: pullRequestAbridged.number
-      })
+    const pullRequests = await octokit.rest.pulls.list({
+      owner: repoOwner,
+      repo
+    })
 
-      if (!onlyMergeMainForDraftPullRequests || pullRequest.data.draft) {
-        core.info(`Merging in the main branch...`)
-
+    for (const pullRequest of pullRequests.data) {
+      if (!onlyMergeMainForDraftPullRequests || pullRequest.draft) {
+        core.info(
+          `Merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref})...`
+        )
         await octokit.rest.repos.merge({
           owner: repoOwner,
           repo,
-          base: pullRequest.data.head.ref,
-          head: MainBranchName
+          base: pullRequest.head.ref,
+          head: mainBranchName
         })
+      } else {
+        if (pullRequest.draft) {
+          core.info(
+            `Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it is a draft PR.`
+          )
+        }
       }
     }
   } catch (error) {

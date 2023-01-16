@@ -42,7 +42,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const wait_1 = __nccwpck_require__(5817);
-const MainBranchName = 'main';
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -58,25 +57,29 @@ function run() {
                 throw new Error('No github token provided');
             }
             const onlyMergeMainForDraftPullRequests = core.getBooleanInput('onlyMergeMainForDraftPullRequests');
+            const mainBranchName = core.getInput('mainBranchName') || 'main';
             core.setOutput('time', new Date().toTimeString());
             const octokit = github.getOctokit(githubToken);
             const repoOwner = github.context.repo.owner;
             const repo = github.context.repo.repo;
-            const pullRequestAbridged = github.context.payload.pull_request;
-            if (pullRequestAbridged) {
-                const pullRequest = yield octokit.rest.pulls.get({
-                    owner: repoOwner,
-                    repo,
-                    pull_number: pullRequestAbridged.number
-                });
-                if (!onlyMergeMainForDraftPullRequests || pullRequest.data.draft) {
-                    core.info(`Merging in the main branch...`);
+            const pullRequests = yield octokit.rest.pulls.list({
+                owner: repoOwner,
+                repo
+            });
+            for (const pullRequest of pullRequests.data) {
+                if (!onlyMergeMainForDraftPullRequests || pullRequest.draft) {
+                    core.info(`Merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref})...`);
                     yield octokit.rest.repos.merge({
                         owner: repoOwner,
                         repo,
-                        base: pullRequest.data.head.ref,
-                        head: MainBranchName
+                        base: pullRequest.head.ref,
+                        head: mainBranchName
                     });
+                }
+                else {
+                    if (pullRequest.draft) {
+                        core.info(`Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it is a draft PR.`);
+                    }
                 }
             }
         }
