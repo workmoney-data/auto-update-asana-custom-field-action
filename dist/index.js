@@ -74,7 +74,7 @@ function run() {
                 .getInput('onlyMergeBranchesWithPrefixes')
                 .split(',')
                 .map(label => label.trim());
-            core.debug(`onlyMergeBranchesWithPrefixes: ${onlyMergeBranchesWithPrefixes}`);
+            core.debug(`onlyMergeBranchesWithPrefixes setting: ${onlyMergeBranchesWithPrefixes}`);
             for (const pullRequest of pullRequests.data) {
                 const labelFoundThatMeansWeShouldSkipSync = pullRequest.labels.find(label => skipPullRequestsWithLabels.find(labelToSkip => labelToSkip.toLowerCase() === label.name.toLowerCase()));
                 if (labelFoundThatMeansWeShouldSkipSync) {

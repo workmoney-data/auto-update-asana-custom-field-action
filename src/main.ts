@@ -51,7 +51,7 @@ async function run(): Promise<void> {
       .split(',')
       .map(label => label.trim())
     core.debug(
-      `onlyMergeBranchesWithPrefixes: ${onlyMergeBranchesWithPrefixes}`
+      `onlyMergeBranchesWithPrefixes setting: ${onlyMergeBranchesWithPrefixes}`
     )
 
     for (const pullRequest of pullRequests.data) {
