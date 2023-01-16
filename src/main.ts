@@ -93,15 +93,25 @@ async function run(): Promise<void> {
         continue
       }
 
-      core.info(
-        `Merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref})...`
-      )
-      await octokit.rest.repos.merge({
-        owner: repoOwner,
-        repo,
-        base: pullRequest.head.ref,
-        head: mainBranchName
-      })
+      try {
+        core.info(
+          `Attempting merge of the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref})...`
+        )
+        await octokit.rest.repos.merge({
+          owner: repoOwner,
+          repo,
+          base: pullRequest.head.ref,
+          head: mainBranchName
+        })
+      } catch (err) {
+        if (err instanceof Error) {
+          core.info(
+            "Couldn't automatically merge in the main branch into the PR head: this is often due to a merge conflict needing resolution."
+          )
+          core.error(err)
+          continue
+        }
+      }
     }
   } catch (error) {
     if (error instanceof Error) {
