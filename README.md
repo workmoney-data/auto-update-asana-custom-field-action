@@ -4,7 +4,7 @@
 
 The idea here is for this to be an incremental part of Mergie, rather than rewrite the existing Mergie functionality. For now, this will be the part that automatically merges `main` to `test*` branches that have active, non-draft PRs.
 
-## Usage
+## Development of this Github Action
 
 Save your changes and commit the build artifacts:
 
@@ -15,7 +15,11 @@ git commit -am "...change description"
 git push origin main
 ```
 
-Then, from another repo, include a Github Workflow file:
+## Using this Github Action from another repo
+
+_Make sure to allow Github Actions from the respective repo you want this Github Action to operate on._
+
+Include a Github Workflow file in the respective repo:
 
 .github/workflows/mergie
 
