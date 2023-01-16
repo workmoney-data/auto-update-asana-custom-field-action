@@ -89,7 +89,7 @@ function run() {
                     }
                 }
                 if (onlyMergeMainForDraftPullRequests && !pullRequest.draft) {
-                    core.info(`Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it is a draft PR.`);
+                    core.info(`Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it is NOT a draft PR.`);
                     continue;
                 }
                 try {
