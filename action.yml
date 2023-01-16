@@ -4,7 +4,7 @@ author: 'Your name or organization here'
 inputs:
   githubToken:
     required: true
-    description: 'a scoped Github token which the action will use to operate on your Pull Requests, defiend in your action YML file as: githubToken: ${{ secrets.GITHUB_TOKEN }}'
+    description: 'a scoped Github token which the action will use to operate on your Pull Requests. See the following for an example: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#example-1-passing-the-github_token-as-an-input'
     default: 'main'
   waitMilliseconds:
     required: false
