@@ -18,7 +18,7 @@ async function run(): Promise<void> {
       required: true
     })
     if (!githubToken) {
-      throw new Error('No github token provided')
+      throw new Error('No github token provided!')
     }
 
     const onlyMergeMainForDraftPullRequests = core.getBooleanInput(

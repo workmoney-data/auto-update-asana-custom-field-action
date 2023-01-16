@@ -52,7 +52,7 @@ function run() {
                 required: true
             });
             if (!githubToken) {
-                throw new Error('No github token provided');
+                throw new Error('No github token provided!');
             }
             const onlyMergeMainForDraftPullRequests = core.getBooleanInput('onlyMergeMainForDraftPullRequests');
             const mainBranchName = core.getInput('mainBranchName') || 'main';
