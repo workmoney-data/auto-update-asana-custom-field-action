@@ -44,18 +44,21 @@ async function run(): Promise<void> {
       .getInput('skipPullRequestsWithLabels')
       .split(',')
       .map(label => label.trim())
+      .filter(label => label !== 'false')
     core.debug(`skipPullRequestsWithLabels: ${skipPullRequestsWithLabels}`)
 
     const onlyPullRequestsWithLabels = core
       .getInput('onlyPullRequestsWithLabels')
       .split(',')
       .map(label => label.trim())
+      .filter(label => label !== 'false')
     core.debug(`onlyPullRequestsWithLabels: ${onlyPullRequestsWithLabels}`)
 
     const onlyMergeBranchesWithPrefixes = core
       .getInput('onlyMergeBranchesWithPrefixes')
       .split(',')
       .map(label => label.trim())
+      .filter(label => label !== 'false')
     core.debug(
       `onlyMergeBranchesWithPrefixes setting: ${onlyMergeBranchesWithPrefixes}`
     )

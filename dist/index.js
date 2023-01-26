@@ -68,17 +68,20 @@ function run() {
             const skipPullRequestsWithLabels = core
                 .getInput('skipPullRequestsWithLabels')
                 .split(',')
-                .map(label => label.trim());
+                .map(label => label.trim())
+                .filter(label => label !== 'false');
             core.debug(`skipPullRequestsWithLabels: ${skipPullRequestsWithLabels}`);
             const onlyPullRequestsWithLabels = core
                 .getInput('onlyPullRequestsWithLabels')
                 .split(',')
-                .map(label => label.trim());
+                .map(label => label.trim())
+                .filter(label => label !== 'false');
             core.debug(`onlyPullRequestsWithLabels: ${onlyPullRequestsWithLabels}`);
             const onlyMergeBranchesWithPrefixes = core
                 .getInput('onlyMergeBranchesWithPrefixes')
                 .split(',')
-                .map(label => label.trim());
+                .map(label => label.trim())
+                .filter(label => label !== 'false');
             core.debug(`onlyMergeBranchesWithPrefixes setting: ${onlyMergeBranchesWithPrefixes}`);
             for (const pullRequest of pullRequests.data) {
                 const labelFoundThatMeansWeShouldSkipSync = pullRequest.labels.find(label => skipPullRequestsWithLabels.find(labelToSkip => labelToSkip.toLowerCase() === label.name.toLowerCase()));
