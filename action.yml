@@ -4,7 +4,7 @@ author: 'Jonathan Sibley'
 inputs:
   githubToken:
     required: true
-    description: 'a scoped Github token which the action will use to operate on your Pull Requests. See the following for an example: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#example-1-passing-the-github_token-as-an-input'
+    description: 'a scoped Github token which the action will use to run on your Pull Requests. See the following for an example: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#example-1-passing-the-github_token-as-an-input'
     default: 'main'
   waitMilliseconds:
     required: false
@@ -20,11 +20,15 @@ inputs:
     default: 'false'
   onlyMergeBranchesWithPrefixes:
     required: false
-    description: 'an optional comma-separated list of branch name prefixes. This action will only operate on Pull Requests whose branch names start with one of these prefixes.'
+    description: 'an optional comma-separated list of branch name prefixes. This action will only run on Pull Requests whose branch names start with one of these prefixes.'
+    default: 'false'
+  onlyPullRequestsWithLabels:
+    required: false
+    description: 'an optional comma-separated list of Pull Request labels required for this action to run on a given Pull Request'
     default: 'false'
   skipPullRequestsWithLabels:
     required: false
-    description: 'an optional comma-separated list of Pull Request labels required for this action to operate on a given Pull Request'
+    description: 'an optional comma-separated list of Pull Request labels which, when present, will prevent this action from running'
     default: 'false'
 
 runs:

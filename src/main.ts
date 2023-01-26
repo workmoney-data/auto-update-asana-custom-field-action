@@ -46,6 +46,12 @@ async function run(): Promise<void> {
       .map(label => label.trim())
     core.debug(`skipPullRequestsWithLabels: ${skipPullRequestsWithLabels}`)
 
+    const onlyPullRequestsWithLabels = core
+      .getInput('onlyPullRequestsWithLabels')
+      .split(',')
+      .map(label => label.trim())
+    core.debug(`onlyPullRequestsWithLabels: ${onlyPullRequestsWithLabels}`)
+
     const onlyMergeBranchesWithPrefixes = core
       .getInput('onlyMergeBranchesWithPrefixes')
       .split(',')
@@ -65,6 +71,17 @@ async function run(): Promise<void> {
       if (labelFoundThatMeansWeShouldSkipSync) {
         core.info(
           `Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it has the label "${labelFoundThatMeansWeShouldSkipSync.name}".`
+        )
+        continue
+      }
+      const labelRequiredButMissing = pullRequest.labels.find(label =>
+        onlyPullRequestsWithLabels.find(
+          labelToSkip => labelToSkip.toLowerCase() === label.name.toLowerCase()
+        )
+      )
+      if (labelRequiredButMissing) {
+        core.info(
+          `Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it is missing the label "${labelRequiredButMissing.name}".`
         )
         continue
       }

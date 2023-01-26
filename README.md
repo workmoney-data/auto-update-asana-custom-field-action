@@ -6,6 +6,8 @@ The idea here is for this to be an incremental part of Mergie, rather than rewri
 
 ## Development of this Github Action
 
+Use Github Codespaces to develop this in-browser. There's an existing codespace already set up.
+
 Save your changes and commit the build artifacts:
 
 ```
@@ -39,4 +41,3 @@ jobs:
     steps:
       - uses: "sprucehealth/mergie-action@latest"
 ```
-
