@@ -40,6 +40,11 @@ async function run(): Promise<void> {
       repo
     })
 
+    const alwaysMergeIntoAutoMergePRs = core.getBooleanInput(
+      'alwaysMergeIntoAutoMergePRs'
+    )
+    core.debug(`alwaysMergeIntoAutoMergePRs: ${alwaysMergeIntoAutoMergePRs}`)
+
     const skipPullRequestsWithLabels = core
       .getInput('skipPullRequestsWithLabels')
       .split(',')
@@ -64,57 +69,62 @@ async function run(): Promise<void> {
     )
 
     for (const pullRequest of pullRequests.data) {
-      const labelFoundThatMeansWeShouldSkipSync = pullRequest.labels.find(
-        label =>
-          skipPullRequestsWithLabels.find(
-            labelToSkip =>
-              labelToSkip.toLowerCase() === label.name.toLowerCase()
-          )
-      )
-      if (labelFoundThatMeansWeShouldSkipSync) {
-        core.info(
-          `Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it has the label "${labelFoundThatMeansWeShouldSkipSync.name}".`
+      // if a PR has Auto-Merge enabled, and alwaysMergeIntoAutoMergePRs is true, then always merge in `main`
+      if (!alwaysMergeIntoAutoMergePRs || !pullRequest.auto_merge) {
+        const labelFoundThatMeansWeShouldSkipSync = pullRequest.labels.find(
+          label =>
+            skipPullRequestsWithLabels.find(
+              labelToSkip =>
+                labelToSkip.toLowerCase() === label.name.toLowerCase()
+            )
         )
-        continue
-      }
-
-      const requiredLabelThatsMissing = onlyPullRequestsWithLabels.find(
-        requiredLabel =>
-          !pullRequest.labels.find(
-            label => label.name.toLowerCase() === requiredLabel.toLowerCase()
-          )
-      )
-      if (requiredLabelThatsMissing) {
-        core.info(
-          `Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it is missing the label "${requiredLabelThatsMissing}".`
-        )
-        continue
-      }
-
-      if (onlyMergeBranchesWithPrefixes.length > 0) {
-        const branchNameStartsWithPrefix = onlyMergeBranchesWithPrefixes.find(
-          prefix =>
-            pullRequest.head.ref.toLowerCase().startsWith(prefix.toLowerCase())
-        )
-        if (!branchNameStartsWithPrefix) {
+        if (labelFoundThatMeansWeShouldSkipSync) {
           core.info(
-            `Not merging in the main branch (${mainBranchName}) into head of PR #${
-              pullRequest.number
-            } (${
-              pullRequest.head.ref
-            }) because it does not start with one of the prefixes: ${JSON.stringify(
-              onlyMergeBranchesWithPrefixes
-            )}.`
+            `Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it has the label "${labelFoundThatMeansWeShouldSkipSync.name}".`
           )
           continue
         }
-      }
 
-      if (onlyMergeMainForDraftPullRequests && !pullRequest.draft) {
-        core.info(
-          `Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it is NOT a draft PR.`
+        const requiredLabelThatsMissing = onlyPullRequestsWithLabels.find(
+          requiredLabel =>
+            !pullRequest.labels.find(
+              label => label.name.toLowerCase() === requiredLabel.toLowerCase()
+            )
         )
-        continue
+        if (requiredLabelThatsMissing) {
+          core.info(
+            `Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it is missing the label "${requiredLabelThatsMissing}".`
+          )
+          continue
+        }
+
+        if (onlyMergeBranchesWithPrefixes.length > 0) {
+          const branchNameStartsWithPrefix = onlyMergeBranchesWithPrefixes.find(
+            prefix =>
+              pullRequest.head.ref
+                .toLowerCase()
+                .startsWith(prefix.toLowerCase())
+          )
+          if (!branchNameStartsWithPrefix) {
+            core.info(
+              `Not merging in the main branch (${mainBranchName}) into head of PR #${
+                pullRequest.number
+              } (${
+                pullRequest.head.ref
+              }) because it does not start with one of the prefixes: ${JSON.stringify(
+                onlyMergeBranchesWithPrefixes
+              )}.`
+            )
+            continue
+          }
+        }
+
+        if (onlyMergeMainForDraftPullRequests && !pullRequest.draft) {
+          core.info(
+            `Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it is NOT a draft PR.`
+          )
+          continue
+        }
       }
 
       try {
@@ -127,6 +137,11 @@ async function run(): Promise<void> {
           base: pullRequest.head.ref,
           head: mainBranchName
         })
+        // set job status to markdown text
+        core.setOutput(
+          'jobStatus',
+          `Merged ${mainBranchName} into ${pullRequest.head.ref}`
+        )
         core.info(
           `Successfully merged the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}).`
         )
