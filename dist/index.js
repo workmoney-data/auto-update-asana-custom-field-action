@@ -89,9 +89,9 @@ function run() {
                     core.info(`Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it has the label "${labelFoundThatMeansWeShouldSkipSync.name}".`);
                     continue;
                 }
-                const labelRequiredButMissing = pullRequest.labels.find(label => onlyPullRequestsWithLabels.find(labelToSkip => labelToSkip.toLowerCase() === label.name.toLowerCase()));
-                if (labelRequiredButMissing) {
-                    core.info(`Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it is missing the label "${labelRequiredButMissing.name}".`);
+                const requiredLabelThatsMissing = onlyPullRequestsWithLabels.find(requiredLabel => !pullRequest.labels.find(label => label.name.toLowerCase() === requiredLabel.toLowerCase()));
+                if (requiredLabelThatsMissing) {
+                    core.info(`Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it is missing the label "${requiredLabelThatsMissing}".`);
                     continue;
                 }
                 if (onlyMergeBranchesWithPrefixes.length > 0) {

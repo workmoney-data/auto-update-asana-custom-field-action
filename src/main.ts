@@ -77,14 +77,16 @@ async function run(): Promise<void> {
         )
         continue
       }
-      const labelRequiredButMissing = pullRequest.labels.find(label =>
-        onlyPullRequestsWithLabels.find(
-          labelToSkip => labelToSkip.toLowerCase() === label.name.toLowerCase()
-        )
+
+      const requiredLabelThatsMissing = onlyPullRequestsWithLabels.find(
+        requiredLabel =>
+          !pullRequest.labels.find(
+            label => label.name.toLowerCase() === requiredLabel.toLowerCase()
+          )
       )
-      if (labelRequiredButMissing) {
+      if (requiredLabelThatsMissing) {
         core.info(
-          `Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it is missing the label "${labelRequiredButMissing.name}".`
+          `Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it is missing the label "${requiredLabelThatsMissing}".`
         )
         continue
       }
