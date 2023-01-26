@@ -125,6 +125,10 @@ async function run(): Promise<void> {
           )
           continue
         }
+      } else {
+        core.info(
+          `Moving forward to merge the main branch due to "alwaysMergeIntoAutoMergePRs" being enabled, and PR PR #${pullRequest.number} (${pullRequest.head.ref}) having auto-merge enabled...`
+        )
       }
 
       try {

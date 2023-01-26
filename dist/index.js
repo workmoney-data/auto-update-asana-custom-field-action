@@ -112,6 +112,9 @@ function run() {
                         continue;
                     }
                 }
+                else {
+                    core.info(`Moving forward to merge the main branch due to "alwaysMergeIntoAutoMergePRs" being enabled, and PR PR #${pullRequest.number} (${pullRequest.head.ref}) having auto-merge enabled...`);
+                }
                 try {
                     core.info(`Attempting merge of the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref})...`);
                     yield octokit.rest.repos.merge({
@@ -120,6 +123,8 @@ function run() {
                         base: pullRequest.head.ref,
                         head: mainBranchName
                     });
+                    // set job status to markdown text
+                    core.setOutput('jobStatus', `Merged ${mainBranchName} into ${pullRequest.head.ref}`);
                     core.info(`Successfully merged the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}).`);
                 }
                 catch (err) {
