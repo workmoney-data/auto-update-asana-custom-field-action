@@ -1,4 +1,4 @@
-# Mergie
+# Auto-merge main into open Pull Requests Github Action
 
 ## What does this do?
 
@@ -23,10 +23,10 @@ _Make sure to allow Github Actions from the respective repo you want this Github
 
 Include a Github Workflow file in the respective repo:
 
-.github/workflows/mergie
+.github/workflows/auto-merge-main-into-pull-requests.yml
 
 ```
-name: "Mergie"
+name: Auto-merge main into open Pull Requests
 
 on:
   push:
@@ -34,10 +34,21 @@ on:
       - "main"
 
 jobs:
-  mergie:
-    name: "Mergie"
+  auto-merge-main-into-open-pull-requests:
+    name: Auto-merge main into open Pull Requests
     runs-on: "ubuntu-latest"
 
     steps:
-      - uses: "sprucehealth/mergie-action@latest"
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Auto-merge main into open Pull Requests
+        uses: "sprucehealth/auto-merge-main-into-pull-requests-action@latest"
+        with:
+          mainBranchName: main
+          waitMilliseconds: 500
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          onlyMergeMainForDraftPullRequests: false
+          onlyPullRequestsWithLabels: TEST_ENVIRONMENT
+          skipPullRequestsWithLabels: DONT_SYNC_MAIN
+
 ```
