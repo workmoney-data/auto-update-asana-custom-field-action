@@ -76,6 +76,8 @@ async function run(): Promise<void> {
     )
 
     for (const pullRequest of pullRequests.data) {
+      core.info(`\n\n#${pullRequest.number} - ${pullRequest.head.ref}:`)
+
       let shouldMergeMain = false
 
       const reviews = await octokit.rest.pulls.listReviews({
@@ -159,6 +161,9 @@ async function run(): Promise<void> {
       }
 
       if (!shouldMergeMain) {
+        core.info(
+          `Not merging the main branch into #${pullRequest.number} (${pullRequest.head.ref})`
+        )
         continue
       }
 

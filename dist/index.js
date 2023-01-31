@@ -88,6 +88,7 @@ function run() {
                 .filter(label => label !== 'false');
             core.debug(`onlyMergeBranchesWithPrefixes setting: ${onlyMergeBranchesWithPrefixes}`);
             for (const pullRequest of pullRequests.data) {
+                core.info(`\n\n#${pullRequest.number} - ${pullRequest.head.ref}:`);
                 let shouldMergeMain = false;
                 const reviews = yield octokit.rest.pulls.listReviews({
                     owner: repoOwner,
@@ -133,6 +134,7 @@ function run() {
                     shouldMergeMain = true;
                 }
                 if (!shouldMergeMain) {
+                    core.info(`Not merging the main branch into #${pullRequest.number} (${pullRequest.head.ref})`);
                     continue;
                 }
                 try {
