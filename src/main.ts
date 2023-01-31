@@ -93,7 +93,7 @@ async function run(): Promise<void> {
           ? `- has at least one review approval`
           : `- has no review approvals`
       )
-      
+
       // if a PR has Auto-Merge enabled, and alwaysMergeIntoAutoMergePRs is true, then always merge in `main`
       if (alwaysMergeIntoAutoMergePRs && pullRequest.auto_merge) {
         shouldMergeMain = true
