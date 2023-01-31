@@ -88,14 +88,12 @@ async function run(): Promise<void> {
       const hasOneApprovedReview =
         reviews.data.length > 0 &&
         reviews.data.some(review => review.state === 'APPROVED')
-
-      core.info(`reviews: ${JSON.stringify(reviews)}`)
-
       core.info(
         hasOneApprovedReview
           ? `- has at least one review approval`
           : `- has no review approvals`
       )
+      
       // if a PR has Auto-Merge enabled, and alwaysMergeIntoAutoMergePRs is true, then always merge in `main`
       if (alwaysMergeIntoAutoMergePRs && pullRequest.auto_merge) {
         shouldMergeMain = true
@@ -107,7 +105,10 @@ async function run(): Promise<void> {
         pullRequest.auto_merge &&
         hasOneApprovedReview
       ) {
-        // DONT MERGE: fill me in
+        shouldMergeMain = true
+        core.info(
+          `- moving forward since "alwaysMergeIntoAutoMergePRsWhenApproved" is enabled, #${pullRequest.number} is Auto-Merge enabled, and has at least one review approval`
+        )
       } else {
         const labelFoundThatMeansWeShouldSkipSync = pullRequest.labels.find(
           label =>
