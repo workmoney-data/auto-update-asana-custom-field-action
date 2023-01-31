@@ -17,6 +17,9 @@ inputs:
   alwaysMergeIntoAutoMergePRs:
     required: false
     description: 'when true, `main` will be merged into all PRs with Auto-Merge turned on, regardless of any other conditions'
+  alwaysMergeIntoAutoMergePRsWhenApproved:
+    required: false
+    description: 'when true, `main` will be merged into all PRs with Auto-Merge turned on and a PR has been approved, regardless of any other conditions'
     default: false
   onlyMergeMainForDraftPullRequests:
     required: false

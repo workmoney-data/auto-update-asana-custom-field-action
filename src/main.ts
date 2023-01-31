@@ -45,6 +45,13 @@ async function run(): Promise<void> {
     )
     core.debug(`alwaysMergeIntoAutoMergePRs: ${alwaysMergeIntoAutoMergePRs}`)
 
+    const alwaysMergeIntoAutoMergePRsWhenApproved = core.getBooleanInput(
+      'alwaysMergeIntoAutoMergePRsWhenApproved'
+    )
+    core.debug(
+      `alwaysMergeIntoAutoMergePRsWhenApproved: ${alwaysMergeIntoAutoMergePRsWhenApproved}`
+    )
+
     const skipPullRequestsWithLabels = core
       .getInput('skipPullRequestsWithLabels')
       .split(',')
@@ -69,8 +76,30 @@ async function run(): Promise<void> {
     )
 
     for (const pullRequest of pullRequests.data) {
+      let shouldMergeMain = false
+
+      const reviews = await octokit.rest.pulls.listReviews({
+        owner: repoOwner,
+        repo,
+        pull_number: pullRequests.number
+      })
+      const hasOneApprovedReview =
+        reviews.data.length > 0 &&
+        reviews.data.some(review => review.state === 'APPROVED')
+
       // if a PR has Auto-Merge enabled, and alwaysMergeIntoAutoMergePRs is true, then always merge in `main`
-      if (!alwaysMergeIntoAutoMergePRs || !pullRequest.auto_merge) {
+      if (alwaysMergeIntoAutoMergePRs && pullRequest.auto_merge) {
+        shouldMergeMain = true
+        core.info(
+          `Moving forward to merge the main branch due to "alwaysMergeIntoAutoMergePRs" being enabled, and PR PR #${pullRequest.number} (${pullRequest.head.ref}) having auto-merge enabled...`
+        )
+      } else if (
+        alwaysMergeIntoAutoMergePRsWhenApproved &&
+        pullRequest.auto_merge &&
+        hasOneApprovedReview
+      ) {
+        // DONT MERGE: fill me in
+      } else {
         const labelFoundThatMeansWeShouldSkipSync = pullRequest.labels.find(
           label =>
             skipPullRequestsWithLabels.find(
@@ -125,10 +154,12 @@ async function run(): Promise<void> {
           )
           continue
         }
-      } else {
-        core.info(
-          `Moving forward to merge the main branch due to "alwaysMergeIntoAutoMergePRs" being enabled, and PR PR #${pullRequest.number} (${pullRequest.head.ref}) having auto-merge enabled...`
-        )
+
+        shouldMergeMain = true
+      }
+
+      if (!shouldMergeMain) {
+        continue
       }
 
       try {
