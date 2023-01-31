@@ -97,10 +97,13 @@ function run() {
                 });
                 const hasOneApprovedReview = reviews.data.length > 0 &&
                     reviews.data.some(review => review.state === 'APPROVED');
+                core.info(hasOneApprovedReview
+                    ? `- has at least one review approval`
+                    : `- has no review approvals`);
                 // if a PR has Auto-Merge enabled, and alwaysMergeIntoAutoMergePRs is true, then always merge in `main`
                 if (alwaysMergeIntoAutoMergePRs && pullRequest.auto_merge) {
                     shouldMergeMain = true;
-                    core.info(`Moving forward to merge the main branch due to "alwaysMergeIntoAutoMergePRs" being enabled, and PR PR #${pullRequest.number} (${pullRequest.head.ref}) having auto-merge enabled...`);
+                    core.info(`- moving forward since "alwaysMergeIntoAutoMergePRs" is enabled and #${pullRequest.number} has Auto-Merge enabled currently`);
                 }
                 else if (alwaysMergeIntoAutoMergePRsWhenApproved &&
                     pullRequest.auto_merge &&
@@ -110,12 +113,12 @@ function run() {
                 else {
                     const labelFoundThatMeansWeShouldSkipSync = pullRequest.labels.find(label => skipPullRequestsWithLabels.find(labelToSkip => labelToSkip.toLowerCase() === label.name.toLowerCase()));
                     if (labelFoundThatMeansWeShouldSkipSync) {
-                        core.info(`Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it has the label "${labelFoundThatMeansWeShouldSkipSync.name}".`);
+                        core.info(`🛑 not moving forward since #${pullRequest.number} has the label "${labelFoundThatMeansWeShouldSkipSync.name}"`);
                         continue;
                     }
                     const requiredLabelThatsMissing = onlyPullRequestsWithLabels.find(requiredLabel => !pullRequest.labels.find(label => label.name.toLowerCase() === requiredLabel.toLowerCase()));
                     if (requiredLabelThatsMissing) {
-                        core.info(`Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it is missing the label "${requiredLabelThatsMissing}".`);
+                        core.info(`🛑 not moving forward since #${pullRequest.number} is missing the label "${requiredLabelThatsMissing}"`);
                         continue;
                     }
                     if (onlyMergeBranchesWithPrefixes.length > 0) {
@@ -123,22 +126,22 @@ function run() {
                             .toLowerCase()
                             .startsWith(prefix.toLowerCase()));
                         if (!branchNameStartsWithPrefix) {
-                            core.info(`Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it does not start with one of the prefixes: ${JSON.stringify(onlyMergeBranchesWithPrefixes)}.`);
+                            core.info(`🛑 not moving forward since the branch for #${pullRequest.number} (${pullRequest.head.ref}) does not start with one of the required prefixes: ${JSON.stringify(onlyMergeBranchesWithPrefixes)}.`);
                             continue;
                         }
                     }
                     if (onlyMergeMainForDraftPullRequests && !pullRequest.draft) {
-                        core.info(`Not merging in the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}) because it is NOT a draft PR.`);
+                        core.info(`🛑 not moving forward since "onlyMergeMainForDraftPullRequests" is enabled and #${pullRequest.number} (${pullRequest.head.ref}) it is NOT a draft PR`);
                         continue;
                     }
                     shouldMergeMain = true;
                 }
                 if (!shouldMergeMain) {
-                    core.info(`Not merging the main branch into #${pullRequest.number} (${pullRequest.head.ref})`);
+                    core.info(`🛑 not merging the ${mainBranchName} branch into #${pullRequest.number} (${pullRequest.head.ref})`);
                     continue;
                 }
                 try {
-                    core.info(`Attempting merge of the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref})...`);
+                    core.info(`... attempting to merge ${mainBranchName} branch into head of PR #${pullRequest.number} (${pullRequest.head.ref})`);
                     yield octokit.rest.repos.merge({
                         owner: repoOwner,
                         repo,
@@ -147,11 +150,11 @@ function run() {
                     });
                     // set job status to markdown text
                     core.setOutput('jobStatus', `Merged ${mainBranchName} into ${pullRequest.head.ref}`);
-                    core.info(`Successfully merged the main branch (${mainBranchName}) into head of PR #${pullRequest.number} (${pullRequest.head.ref}).`);
+                    core.info(`✅ successfully merged the ${mainBranchName} branch into head of PR #${pullRequest.number} (${pullRequest.head.ref}).`);
                 }
                 catch (err) {
                     if (err instanceof Error) {
-                        core.info(`Couldn't automatically merge in the main branch into the PR head: this is often due to a merge conflict needing resolution. Error: ${err.message}`);
+                        core.info(`⚠️ couldn't automatically merge in the ${mainBranchName} branch into the PR head: this is often due to a merge conflict needing resolution. Error: ${err.message}`);
                         // We intentionally don't log this as an error because that shows up as a red X in the GitHub UI, which is confusing because it's an expected outcome
                         // core.error(err)
                         continue;
