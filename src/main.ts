@@ -81,7 +81,7 @@ async function run(): Promise<void> {
       const reviews = await octokit.rest.pulls.listReviews({
         owner: repoOwner,
         repo,
-        pull_number: pullRequests.number
+        pull_number: pullRequest.number
       })
       const hasOneApprovedReview =
         reviews.data.length > 0 &&
