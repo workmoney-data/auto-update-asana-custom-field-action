@@ -97,6 +97,7 @@ function run() {
                 });
                 const hasOneApprovedReview = reviews.data.length > 0 &&
                     reviews.data.some(review => review.state === 'APPROVED');
+                core.info(`reviews: ${JSON.stringify(reviews)}`);
                 core.info(hasOneApprovedReview
                     ? `- has at least one review approval`
                     : `- has no review approvals`);
