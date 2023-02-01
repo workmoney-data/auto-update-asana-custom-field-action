@@ -1,43 +1,11 @@
-name: 'Auto-merge Main Branch Into Pull Requests'
-description: 'This action will helps your organization by automatically merging new commits to your main branch into open Pull Requests'
+name: 'Auto-update Asana status fields'
+description: 'This action updates a specific custom field in Asana that we have at Spruce depending on Pull Request status'
 author: 'Jonathan Sibley'
 inputs:
-  githubToken:
+  asanaToken:
     required: true
-    description: 'a scoped Github token which the action will use to run on your Pull Requests. See the following for an example: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#example-1-passing-the-github_token-as-an-input'
-    default: 'main'
-  waitMilliseconds:
-    required: false
-    description: 'an optional forced wait time (in milliseconds) before this action runs'
-    default: '0'
-  mainBranchName:
-    required: false
-    description: 'the name of the main branch for your repo'
-    default: 'main'
-  alwaysMergeIntoAutoMergePRs:
-    required: false
-    description: 'when true, `main` will be merged into all PRs with Auto-Merge turned on, regardless of any other conditions'
-    default: false
-  alwaysMergeIntoAutoMergePRsWhenApproved:
-    required: false
-    description: 'when true, `main` will be merged into all PRs with Auto-Merge turned on and a PR has been approved, regardless of any other conditions'
-    default: false
-  onlyMergeMainForDraftPullRequests:
-    required: false
-    description: 'set to `true` if you would like this action to only run on Pull Requests in the Draft state'
-    default: 'false'
-  onlyMergeBranchesWithPrefixes:
-    required: false
-    description: 'an optional comma-separated list of branch name prefixes. This action will only run on Pull Requests whose branch names start with one of these prefixes.'
-    default: 'false'
-  onlyPullRequestsWithLabels:
-    required: false
-    description: 'an optional comma-separated list of Pull Request labels required for this action to run on a given Pull Request'
-    default: 'false'
-  skipPullRequestsWithLabels:
-    required: false
-    description: 'an optional comma-separated list of Pull Request labels which, when present, will prevent this action from running'
-    default: 'false'
+    description: 'an Asana token with access to the projects and tasks you want to update'
+    default: ''
 
 runs:
   using: 'node16'

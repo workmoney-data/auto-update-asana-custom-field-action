@@ -1,217 +1,99 @@
+import * as Asana from 'asana'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 
-import {wait} from './wait'
+const statusFieldGID = '257694800786854'
+
+// getAsanaTaskGIDsFromText function copied from /diffy-mcdiffface/functions/updatePRBodyWithAsanaTaskURLs.ts
+function getAsanaTaskGIDsFromText(text: string): string[] {
+  const asanaTaskGIDsInBodySorted = text
+    .split('\r\n')
+    .flatMap(line => line.split('\n'))
+    .flatMap(line => {
+      const match = line.match(
+        /https:\/\/app.asana.com(?:\/(?:[0-9]+|board|search|inbox))+(?:\/(?<taskGID>[0-9]+))+/
+      )
+      if (!match) {
+        return []
+      }
+      const {taskGID} = match.groups as {taskGID: string}
+      return taskGID
+    })
+    .sort((a, b) => a.localeCompare(b))
+
+  const allUniqueAsanaGIDsSorted = Array.from(
+    new Set([...asanaTaskGIDsInBodySorted])
+  ).sort((a, b) => a.localeCompare(b))
+
+  let noNewAsanaGIDs = true
+  if (allUniqueAsanaGIDsSorted.length === asanaTaskGIDsInBodySorted.length) {
+    for (let i = 0; i < allUniqueAsanaGIDsSorted.length; i++) {
+      const a = allUniqueAsanaGIDsSorted[i]
+      const b = asanaTaskGIDsInBodySorted[i]
+      if (a !== b) {
+        noNewAsanaGIDs = false
+        break
+      }
+    }
+  }
+
+  return allUniqueAsanaGIDsSorted
+}
 
 async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('waitMilliseconds')
-    if (ms) {
-      core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
-
-      core.debug(new Date().toTimeString())
-      await wait(parseInt(ms, 10))
-      core.debug(new Date().toTimeString())
+    const body = github.context.payload.pull_request?.body
+    if (!body) {
+      core.info(`🛑 couldn't find PR body`)
+      return
     }
 
-    const githubToken: string = core.getInput('githubToken', {
+    const asanaToken: string = core.getInput('asanaToken', {
       required: true
     })
-    if (!githubToken) {
-      throw new Error('No github token provided!')
+    if (!asanaToken) {
+      throw new Error(`🛑 couldn't find Asana access token`)
     }
 
-    const onlyMergeMainForDraftPullRequests = core.getBooleanInput(
-      'onlyMergeMainForDraftPullRequests'
-    )
+    const taskIDs = getAsanaTaskGIDsFromText(body)
+    for (const taskID of taskIDs) {
+      core.info(`🎬 Attempting to update mentioned task ${taskID}`)
 
-    const mainBranchName = core.getInput('mainBranchName') || 'main'
-    core.debug(`Main branch name: ${mainBranchName}`)
+      const client = Asana.Client.create().useAccessToken(asanaToken)
+      const task = await client.tasks.findById(taskID)
+      core.info(`Task name: "${task.name}"`)
 
-    core.setOutput('time', new Date().toTimeString())
+      const customFields = task.custom_fields
+      core.debug(`Custom fields on task: ${JSON.stringify(customFields)}`)
 
-    const octokit = github.getOctokit(githubToken)
+      // uncomment this to get the GIDs of the custom fields' values
+      // core.debug(
+      //   `Custom fields on task: ${JSON.stringify(customFields[1].enum_options)}`
+      // )
 
-    const repoOwner = github.context.repo.owner
-    const repo = github.context.repo.repo
-
-    const pullRequests = await octokit.rest.pulls.list({
-      owner: repoOwner,
-      repo
-    })
-
-    const alwaysMergeIntoAutoMergePRs = core.getBooleanInput(
-      'alwaysMergeIntoAutoMergePRs'
-    )
-    core.debug(`alwaysMergeIntoAutoMergePRs: ${alwaysMergeIntoAutoMergePRs}`)
-
-    const alwaysMergeIntoAutoMergePRsWhenApproved = core.getBooleanInput(
-      'alwaysMergeIntoAutoMergePRsWhenApproved'
-    )
-    core.debug(
-      `alwaysMergeIntoAutoMergePRsWhenApproved: ${alwaysMergeIntoAutoMergePRsWhenApproved}`
-    )
-
-    const skipPullRequestsWithLabels = core
-      .getInput('skipPullRequestsWithLabels')
-      .split(',')
-      .map(label => label.trim())
-      .filter(label => label !== 'false')
-    core.debug(`skipPullRequestsWithLabels: ${skipPullRequestsWithLabels}`)
-
-    const onlyPullRequestsWithLabels = core
-      .getInput('onlyPullRequestsWithLabels')
-      .split(',')
-      .map(label => label.trim())
-      .filter(label => label !== 'false')
-    core.debug(`onlyPullRequestsWithLabels: ${onlyPullRequestsWithLabels}`)
-
-    const onlyMergeBranchesWithPrefixes = core
-      .getInput('onlyMergeBranchesWithPrefixes')
-      .split(',')
-      .map(label => label.trim())
-      .filter(label => label !== 'false')
-    core.debug(
-      `onlyMergeBranchesWithPrefixes setting: ${onlyMergeBranchesWithPrefixes}`
-    )
-
-    for (const pullRequest of pullRequests.data) {
-      core.info(`\n\n#${pullRequest.number} - ${pullRequest.head.ref}:`)
-
-      let shouldMergeMain = false
-
-      const reviews = await octokit.rest.pulls.listReviews({
-        owner: repoOwner,
-        repo,
-        pull_number: pullRequest.number
-      })
-      const hasOneApprovedReview =
-        reviews.data.length > 0 &&
-        reviews.data.some(review => review.state === 'APPROVED')
-      core.info(
-        hasOneApprovedReview
-          ? `- has at least one review approval`
-          : `- has no review approvals`
+      const statusCustomField = customFields.find(
+        field => field.gid === statusFieldGID
       )
-
-      // if a PR has Auto-Merge enabled, and alwaysMergeIntoAutoMergePRs is true, then always merge in `main`
-      if (alwaysMergeIntoAutoMergePRs && pullRequest.auto_merge) {
-        shouldMergeMain = true
-        core.info(
-          `- moving forward since "alwaysMergeIntoAutoMergePRs" is enabled and #${pullRequest.number} has Auto-Merge enabled currently`
-        )
-      } else if (
-        alwaysMergeIntoAutoMergePRsWhenApproved &&
-        pullRequest.auto_merge &&
-        hasOneApprovedReview
-      ) {
-        shouldMergeMain = true
-        core.info(
-          `- moving forward since "alwaysMergeIntoAutoMergePRsWhenApproved" is enabled, #${pullRequest.number} is Auto-Merge enabled, and has at least one review approval`
-        )
-      } else {
-        const labelFoundThatMeansWeShouldSkipSync = pullRequest.labels.find(
-          label =>
-            skipPullRequestsWithLabels.find(
-              labelToSkip =>
-                labelToSkip.toLowerCase() === label.name.toLowerCase()
-            )
-        )
-        if (labelFoundThatMeansWeShouldSkipSync) {
-          core.info(
-            `🛑 not moving forward since #${pullRequest.number} has the label "${labelFoundThatMeansWeShouldSkipSync.name}"`
-          )
-          continue
-        }
-
-        const requiredLabelThatsMissing = onlyPullRequestsWithLabels.find(
-          requiredLabel =>
-            !pullRequest.labels.find(
-              label => label.name.toLowerCase() === requiredLabel.toLowerCase()
-            )
-        )
-        if (requiredLabelThatsMissing) {
-          core.info(
-            `🛑 not moving forward since #${pullRequest.number} is missing the label "${requiredLabelThatsMissing}"`
-          )
-          continue
-        }
-
-        if (onlyMergeBranchesWithPrefixes.length > 0) {
-          const branchNameStartsWithPrefix = onlyMergeBranchesWithPrefixes.find(
-            prefix =>
-              pullRequest.head.ref
-                .toLowerCase()
-                .startsWith(prefix.toLowerCase())
-          )
-          if (!branchNameStartsWithPrefix) {
-            core.info(
-              `🛑 not moving forward since the branch for #${
-                pullRequest.number
-              } (${
-                pullRequest.head.ref
-              }) does not start with one of the required prefixes: ${JSON.stringify(
-                onlyMergeBranchesWithPrefixes
-              )}.`
-            )
-            continue
-          }
-        }
-
-        if (onlyMergeMainForDraftPullRequests && !pullRequest.draft) {
-          core.info(
-            `🛑 not moving forward since "onlyMergeMainForDraftPullRequests" is enabled and #${pullRequest.number} (${pullRequest.head.ref}) it is NOT a draft PR`
-          )
-          continue
-        }
-
-        shouldMergeMain = true
-      }
-
-      if (!shouldMergeMain) {
-        core.info(
-          `🛑 not merging the ${mainBranchName} branch into #${pullRequest.number} (${pullRequest.head.ref})`
-        )
+      if (!statusCustomField) {
+        core.info(`🛑 didn't find status field`)
         continue
       }
-
-      try {
-        core.info(
-          `... attempting to merge ${mainBranchName} branch into head of PR #${pullRequest.number} (${pullRequest.head.ref})`
-        )
-        await octokit.rest.repos.merge({
-          owner: repoOwner,
-          repo,
-          base: pullRequest.head.ref,
-          head: mainBranchName
-        })
-        // set job status to markdown text
-        core.setOutput(
-          'jobStatus',
-          `Merged ${mainBranchName} into ${pullRequest.head.ref}`
-        )
-        core.info(
-          `✅ successfully merged the ${mainBranchName} branch into head of PR #${pullRequest.number} (${pullRequest.head.ref}).`
-        )
-      } catch (err) {
-        if (err instanceof Error) {
-          core.info(
-            `⚠️ couldn't automatically merge in the ${mainBranchName} branch into the PR head: this is often due to a merge conflict needing resolution. Error: ${err.message}`
-          )
-          // We intentionally don't log this as an error because that shows up as a red X in the GitHub UI, which is confusing because it's an expected outcome
-          // core.error(err)
-          continue
+      await client.tasks.update(taskID, {
+        custom_fields: {
+          // GID of the "📖 In Code Review" option
+          [statusFieldGID]: '316679932150690'
         }
-      }
+      })
     }
   } catch (error) {
     if (error instanceof Error) {
       core.error(error)
       core.setFailed(error.message)
+      console.error(JSON.stringify(error))
     }
   }
 }
 
-core.info('Running Mergie...')
+core.info('Running...')
 
 run()
