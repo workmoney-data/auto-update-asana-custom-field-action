@@ -11,6 +11,7 @@ Use Github Codespaces to develop this in-browser. There's an existing codespace 
 Save your changes and commit the build artifacts:
 
 ```
+nvm use
 yarn build
 yarn package
 git commit -am "...change description"

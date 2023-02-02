@@ -55,6 +55,13 @@ async function run(): Promise<void> {
       throw new Error(`🛑 couldn't find Asana access token`)
     }
 
+    const mainBranchName: string = core.getInput('mainBranchName', {
+      required: true
+    })
+    if (!asanaToken) {
+      throw new Error(`🛑 main branch name must be specified`)
+    }
+
     const taskIDs = getAsanaTaskGIDsFromText(body)
     for (const taskID of taskIDs) {
       core.info(`🎬 Attempting to update mentioned task ${taskID}`)
@@ -70,6 +77,73 @@ async function run(): Promise<void> {
       // core.debug(
       //   `Custom fields on task: ${JSON.stringify(customFields[1].enum_options)}`
       // )
+
+      // these are the possible values for the `status` custom field
+      // [
+      //   {
+      //     gid: '316679932150687',
+      //     color: 'red',
+      //     enabled: true,
+      //     name: '⛔️ Blocked',
+      //     resource_type: 'enum_option'
+      //   },
+      //   {
+      //     gid: '337934556375517',
+      //     color: 'blue',
+      //     enabled: true,
+      //     name: '✏️ In Development',
+      //     resource_type: 'enum_option'
+      //   },
+      //   {
+      //     gid: '316679932150689',
+      //     color: 'yellow',
+      //     enabled: true,
+      //     name: '⏸ Paused',
+      //     resource_type: 'enum_option'
+      //   },
+      //   {
+      //     gid: '316679932150690',
+      //     color: 'green',
+      //     enabled: true,
+      //     name: '📖 In Code Review',
+      //     resource_type: 'enum_option'
+      //   },
+      //   {
+      //     gid: '1203202062692552',
+      //     color: 'orange',
+      //     enabled: true,
+      //     name: '🫱 Not Started',
+      //     resource_type: 'enum_option'
+      //   },
+      //   {
+      //     gid: '1203204719175103',
+      //     color: 'yellow-green',
+      //     enabled: true,
+      //     name: '🤞Testing',
+      //     resource_type: 'enum_option'
+      //   },
+      //   {
+      //     gid: '1203228454200302',
+      //     color: 'yellow-orange',
+      //     enabled: true,
+      //     name: '🏁 Ready to merge',
+      //     resource_type: 'enum_option'
+      //   },
+      //   {
+      //     gid: '1203276499178630',
+      //     color: 'blue-green',
+      //     enabled: true,
+      //     name: '🚀 Shipped',
+      //     resource_type: 'enum_option'
+      //   },
+      //   {
+      //     gid: '1203277864039331',
+      //     color: 'aqua',
+      //     enabled: true,
+      //     name: 'ᛦ Merged ',
+      //     resource_type: 'enum_option'
+      //   }
+      // ]
 
       const statusCustomField = customFields.find(
         field => field.gid === statusFieldGID

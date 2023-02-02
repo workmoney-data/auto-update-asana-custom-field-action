@@ -2,6 +2,10 @@ name: 'Auto-update Asana status fields'
 description: 'This action updates a specific custom field in Asana that we have at Spruce depending on Pull Request status'
 author: 'Jonathan Sibley'
 inputs:
+  mainBranchName:
+    required: false
+    description: 'the name of the repo main branch'
+    default: 'main'
   asanaToken:
     required: true
     description: 'an Asana token with access to the projects and tasks you want to update'
