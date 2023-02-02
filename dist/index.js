@@ -95,8 +95,8 @@ function run() {
                 return;
             }
             const statusFieldName = core.getInput('statusFieldName');
-            const statusFieldValueWhenPRReadyForReviewIsOpened = core.getInput('statusFieldValueWhenPRReadyForReviewIsOpened');
-            const statusFieldValueWhenDraftPRIsOpened = core.getInput('statusFieldValueWhenDraftPRIsOpened');
+            const statusFieldValueWhenPRReadyForReviewIsOpen = core.getInput('statusFieldValueWhenPRReadyForReviewIsOpen');
+            const statusFieldValueWhenDraftPRIsOpen = core.getInput('statusFieldValueWhenDraftPRIsOpen');
             const statusFieldValueForMergedCommitToMain = core.getInput('statusFieldValueForMergedCommitToMain');
             const taskIDs = getAsanaTaskGIDsFromText(body);
             for (const taskID of taskIDs) {
@@ -355,12 +355,12 @@ function run() {
                 // this is expected to run upon PRs being opened or reopened
                 triggerIsPullRequest) {
                     if (((_d = github.context.payload.pull_request) === null || _d === void 0 ? void 0 : _d.draft) &&
-                        statusFieldValueWhenDraftPRIsOpened) {
-                        yield setStatus({ fieldValue: statusFieldValueWhenDraftPRIsOpened });
+                        statusFieldValueWhenDraftPRIsOpen) {
+                        yield setStatus({ fieldValue: statusFieldValueWhenDraftPRIsOpen });
                     }
-                    else if (statusFieldValueWhenPRReadyForReviewIsOpened) {
+                    else if (statusFieldValueWhenPRReadyForReviewIsOpen) {
                         yield setStatus({
-                            fieldValue: statusFieldValueWhenPRReadyForReviewIsOpened
+                            fieldValue: statusFieldValueWhenPRReadyForReviewIsOpen
                         });
                     }
                 }

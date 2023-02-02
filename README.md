@@ -14,11 +14,7 @@ Use Github Codespaces to develop this in-browser. There's an existing codespace 
 Save your changes and commit the build artifacts:
 
 ```
-nvm use && npm install &&npm run build
-npm run package
-git add -A
-git commit
-git push origin main
+nvm use && npm install &&npm run build && npm run package && git add -A && git commit && git push origin main
 ```
 
 Upon pushing, you'll trigger an automatic release
@@ -55,6 +51,7 @@ jobs:
           mainBranchName: main
           asanaToken: ${{ secrets.ASANA_TOKEN }}
           statusFieldName: "Status"
-          statusFieldValueForInCodeReview: "📖 In Code Review"
+          statusFieldValueWhenDraftPRIsOpened: "📖 In Code Review"
+          statusFieldValueWhenPRReadyForReviewIsOpened: "✏️ In Development"
           statusFieldValueForMergedCommitToMain: "ᛦ Merged"
 ```

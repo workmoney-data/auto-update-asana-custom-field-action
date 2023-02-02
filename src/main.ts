@@ -72,11 +72,11 @@ async function run(): Promise<void> {
     }
 
     const statusFieldName: string = core.getInput('statusFieldName')
-    const statusFieldValueWhenPRReadyForReviewIsOpened: string = core.getInput(
-      'statusFieldValueWhenPRReadyForReviewIsOpened'
+    const statusFieldValueWhenPRReadyForReviewIsOpen: string = core.getInput(
+      'statusFieldValueWhenPRReadyForReviewIsOpen'
     )
-    const statusFieldValueWhenDraftPRIsOpened: string = core.getInput(
-      'statusFieldValueWhenDraftPRIsOpened'
+    const statusFieldValueWhenDraftPRIsOpen: string = core.getInput(
+      'statusFieldValueWhenDraftPRIsOpen'
     )
     const statusFieldValueForMergedCommitToMain: string = core.getInput(
       'statusFieldValueForMergedCommitToMain'
@@ -365,12 +365,12 @@ async function run(): Promise<void> {
       ) {
         if (
           github.context.payload.pull_request?.draft &&
-          statusFieldValueWhenDraftPRIsOpened
+          statusFieldValueWhenDraftPRIsOpen
         ) {
-          await setStatus({fieldValue: statusFieldValueWhenDraftPRIsOpened})
-        } else if (statusFieldValueWhenPRReadyForReviewIsOpened) {
+          await setStatus({fieldValue: statusFieldValueWhenDraftPRIsOpen})
+        } else if (statusFieldValueWhenPRReadyForReviewIsOpen) {
           await setStatus({
-            fieldValue: statusFieldValueWhenPRReadyForReviewIsOpened
+            fieldValue: statusFieldValueWhenPRReadyForReviewIsOpen
           })
         }
       } else if (

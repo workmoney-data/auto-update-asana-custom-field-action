@@ -14,11 +14,11 @@ inputs:
     required: false
     description: 'if specified, this custom field will be set automatically when a PR is opened or merged'
     default: ''
-  statusFieldValueWhenDraftPRIsOpened:
+  statusFieldValueWhenDraftPRIsOpen:
     required: false
     description: 'if specified, the statusFieldName will be set to the enum of this value when a PR is in draft mode. This should be the name of the enum value, as it appears in the Asana UI (as opposed to the GID or some other identifier).'
     default: ''
-  statusFieldValueWhenPRReadyForReviewIsOpened:
+  statusFieldValueWhenPRReadyForReviewIsOpen:
     required: false
     description: 'if specified, the statusFieldName will be set to the enum of this value when a PR is ready for review (not in draft mode). This should be the name of the enum value, as it appears in the Asana UI (as opposed to the GID or some other identifier).'
     default: ''
