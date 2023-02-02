@@ -51,7 +51,7 @@ jobs:
           mainBranchName: main
           asanaToken: ${{ secrets.ASANA_TOKEN }}
           statusFieldName: "Status"
-          statusFieldValueWhenDraftPRIsOpened: "📖 In Code Review"
-          statusFieldValueWhenPRReadyForReviewIsOpened: "✏️ In Development"
+          statusFieldValueWhenDraftPRIsOpen: "📖 In Code Review"
+          statusFieldValueWhenPRReadyForReviewIsOpen: "✏️ In Development"
           statusFieldValueForMergedCommitToMain: "ᛦ Merged"
 ```
