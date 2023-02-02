@@ -1,4 +1,4 @@
-# Auto-merge main into open Pull Requests Github Action
+# Auto-update Custom Fields in Linked Asana Tasks
 
 ## What does this do?
 
@@ -14,9 +14,12 @@ Save your changes and commit the build artifacts:
 nvm use
 yarn build
 yarn package
-git commit -am "...change description"
+git add -A
+git commit
 git push origin main
 ```
+
+Upon pushing, you'll trigger an automatic release
 
 ## Using this Github Action from another repo
 

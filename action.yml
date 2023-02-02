@@ -10,6 +10,18 @@ inputs:
     required: true
     description: 'an Asana token with access to the projects and tasks you want to update'
     default: ''
+  statusFieldName:
+    required: false
+    description: 'if specified, this custom field will be set automatically when a PR is opened or merged'
+    default: ''
+  statusFieldValueForInCodeReview:
+    required: false
+    description: 'if specified, the statusFieldName will be set to the enum of this value when a PR is opened. This should be the name of the enum value, as it appears in the Asana UI (as opposed to the GID or some other identifier).'
+    default: ''
+  statusFieldValueForMergedCommitToMain:
+    required: false
+    description: 'if specified, the statusFieldName will be set to the enum of this value when a PR is merged into main (or any other commit is pushed to main, for that matter). This should be the name of the enum value, as it appears in the Asana UI (as opposed to the GID or some other identifier).'
+    default: ''
 
 runs:
   using: 'node16'
