@@ -44,16 +44,11 @@ async function run(): Promise<void> {
   try {
     core.info(`Triggered by event name: ${github.context.eventName}`)
 
-    const triggerIsPROpenedOrReopened =
-      github.context.eventName === 'pull_request'
-    const triggerIsPushToMain = github.context.eventName === 'push'
-
-    const body = triggerIsPROpenedOrReopened
-      ? github.context.payload.pull_request?.body
-      : github.context.payload.commits?.[0]?.message
-    if (!body) {
-      core.info(`🛑 couldn't find PR body`)
-      return
+    const mainBranchName: string = core.getInput('mainBranchName', {
+      required: true
+    })
+    if (!mainBranchName) {
+      throw new Error(`🛑 main branch name must be specified`)
     }
 
     const asanaToken: string = core.getInput('asanaToken', {
@@ -62,17 +57,26 @@ async function run(): Promise<void> {
     if (!asanaToken) {
       throw new Error(`🛑 couldn't find Asana access token`)
     }
+    const triggerIsPushToMain =
+      github.context.eventName === 'push' &&
+      github.context.ref === `refs/heads/${mainBranchName}`
 
-    const mainBranchName: string = core.getInput('mainBranchName', {
-      required: true
-    })
-    if (!asanaToken) {
-      throw new Error(`🛑 main branch name must be specified`)
+    const triggerIsPullRequest = github.context.eventName === 'pull_request'
+
+    const body = triggerIsPullRequest
+      ? github.context.payload.pull_request?.body
+      : github.context.payload.commits?.[0]?.message
+    if (!body) {
+      core.info(`🛑 couldn't find PR body`)
+      return
     }
 
     const statusFieldName: string = core.getInput('statusFieldName')
-    const statusFieldValueForInCodeReview: string = core.getInput(
-      'statusFieldValueForInCodeReview'
+    const statusFieldValueWhenPRReadyForReviewIsOpened: string = core.getInput(
+      'statusFieldValueWhenPRReadyForReviewIsOpened'
+    )
+    const statusFieldValueWhenDraftPRIsOpened: string = core.getInput(
+      'statusFieldValueWhenDraftPRIsOpened'
     )
     const statusFieldValueForMergedCommitToMain: string = core.getInput(
       'statusFieldValueForMergedCommitToMain'
@@ -328,21 +332,22 @@ async function run(): Promise<void> {
         continue
       }
 
-      if (
-        // this is expected to run upon PRs being opened or reopened
-        triggerIsPROpenedOrReopened &&
-        statusFieldValueForInCodeReview
-      ) {
+      const setStatus = async ({
+        fieldValue
+      }: {
+        fieldValue: string
+      }): Promise<{didSetStatus: boolean}> => {
+        core.info(`✏️ attempting to update status to ${fieldValue}`)
         const enumOption = statusCustomField.enum_options?.find(
-          option => option.name === statusFieldValueForInCodeReview
+          option => option.name === fieldValue
         )
         if (!enumOption) {
           core.info(
-            `🛑 didn't find enum option called ${statusFieldValueForInCodeReview} on status field ${JSON.stringify(
+            `🛑 didn't find enum option called ${fieldValue} on status field ${JSON.stringify(
               statusCustomField
             )} for this task`
           )
-          continue
+          return {didSetStatus: false}
         }
         await client.tasks.update(taskID, {
           custom_fields: {
@@ -350,27 +355,31 @@ async function run(): Promise<void> {
             [statusCustomField.gid]: enumOption.gid
           }
         })
+        core.info(`✅ status updated to ${fieldValue}`)
+        return {didSetStatus: true}
+      }
+
+      if (
+        // this is expected to run upon PRs being opened or reopened
+        triggerIsPullRequest
+      ) {
+        if (
+          github.context.payload.pull_request?.draft &&
+          statusFieldValueWhenDraftPRIsOpened
+        ) {
+          await setStatus({fieldValue: statusFieldValueWhenDraftPRIsOpened})
+        } else if (statusFieldValueWhenPRReadyForReviewIsOpened) {
+          await setStatus({
+            fieldValue: statusFieldValueWhenPRReadyForReviewIsOpened
+          })
+        }
       } else if (
         // this is expected to run on pushes to `main` (aka a merged pull request)
         triggerIsPushToMain &&
         statusFieldValueForMergedCommitToMain
       ) {
-        const enumOption = statusCustomField.enum_options?.find(
-          option => option.name === statusFieldValueForMergedCommitToMain
-        )
-        if (!enumOption) {
-          core.info(
-            `🛑 didn't find enum option called ${statusFieldValueForMergedCommitToMain} on status field ${JSON.stringify(
-              statusCustomField
-            )} for this task`
-          )
-          continue
-        }
-        await client.tasks.update(taskID, {
-          custom_fields: {
-            // GID of the "📖 In Code Review" option
-            [statusCustomField.gid]: enumOption.gid
-          }
+        await setStatus({
+          fieldValue: statusFieldValueForMergedCommitToMain
         })
       }
     }
@@ -378,7 +387,6 @@ async function run(): Promise<void> {
     if (error instanceof Error) {
       core.error(error)
       core.setFailed(error.message)
-      console.error(JSON.stringify(error))
     }
   }
 }

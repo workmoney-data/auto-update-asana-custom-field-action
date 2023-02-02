@@ -68,18 +68,15 @@ function getAsanaTaskGIDsFromText(text) {
     return allUniqueAsanaGIDsSorted;
 }
 function run() {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             core.info(`Triggered by event name: ${github.context.eventName}`);
-            const triggerIsPROpenedOrReopened = github.context.eventName === 'pull_request';
-            const triggerIsPushToMain = github.context.eventName === 'push';
-            const body = triggerIsPROpenedOrReopened
-                ? (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.body
-                : (_c = (_b = github.context.payload.commits) === null || _b === void 0 ? void 0 : _b[0]) === null || _c === void 0 ? void 0 : _c.message;
-            if (!body) {
-                core.info(`🛑 couldn't find PR body`);
-                return;
+            const mainBranchName = core.getInput('mainBranchName', {
+                required: true
+            });
+            if (!mainBranchName) {
+                throw new Error(`🛑 main branch name must be specified`);
             }
             const asanaToken = core.getInput('asanaToken', {
                 required: true
@@ -87,14 +84,19 @@ function run() {
             if (!asanaToken) {
                 throw new Error(`🛑 couldn't find Asana access token`);
             }
-            const mainBranchName = core.getInput('mainBranchName', {
-                required: true
-            });
-            if (!asanaToken) {
-                throw new Error(`🛑 main branch name must be specified`);
+            const triggerIsPushToMain = github.context.eventName === 'push' &&
+                github.context.ref === `refs/heads/${mainBranchName}`;
+            const triggerIsPullRequest = github.context.eventName === 'pull_request';
+            const body = triggerIsPullRequest
+                ? (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.body
+                : (_c = (_b = github.context.payload.commits) === null || _b === void 0 ? void 0 : _b[0]) === null || _c === void 0 ? void 0 : _c.message;
+            if (!body) {
+                core.info(`🛑 couldn't find PR body`);
+                return;
             }
             const statusFieldName = core.getInput('statusFieldName');
-            const statusFieldValueForInCodeReview = core.getInput('statusFieldValueForInCodeReview');
+            const statusFieldValueWhenPRReadyForReviewIsOpened = core.getInput('statusFieldValueWhenPRReadyForReviewIsOpened');
+            const statusFieldValueWhenDraftPRIsOpened = core.getInput('statusFieldValueWhenDraftPRIsOpened');
             const statusFieldValueForMergedCommitToMain = core.getInput('statusFieldValueForMergedCommitToMain');
             const taskIDs = getAsanaTaskGIDsFromText(body);
             for (const taskID of taskIDs) {
@@ -332,14 +334,13 @@ function run() {
                     core.info(`🛑 didn't find status field called ${statusFieldName} on this task`);
                     continue;
                 }
-                if (
-                // this is expected to run upon PRs being opened or reopened
-                triggerIsPROpenedOrReopened &&
-                    statusFieldValueForInCodeReview) {
-                    const enumOption = (_d = statusCustomField.enum_options) === null || _d === void 0 ? void 0 : _d.find(option => option.name === statusFieldValueForInCodeReview);
+                const setStatus = ({ fieldValue }) => __awaiter(this, void 0, void 0, function* () {
+                    var _e;
+                    core.info(`✏️ attempting to update status to ${fieldValue}`);
+                    const enumOption = (_e = statusCustomField.enum_options) === null || _e === void 0 ? void 0 : _e.find(option => option.name === fieldValue);
                     if (!enumOption) {
-                        core.info(`🛑 didn't find enum option called ${statusFieldValueForInCodeReview} on status field ${JSON.stringify(statusCustomField)} for this task`);
-                        continue;
+                        core.info(`🛑 didn't find enum option called ${fieldValue} on status field ${JSON.stringify(statusCustomField)} for this task`);
+                        return { didSetStatus: false };
                     }
                     yield client.tasks.update(taskID, {
                         custom_fields: {
@@ -347,21 +348,28 @@ function run() {
                             [statusCustomField.gid]: enumOption.gid
                         }
                     });
+                    core.info(`✅ status updated to ${fieldValue}`);
+                    return { didSetStatus: true };
+                });
+                if (
+                // this is expected to run upon PRs being opened or reopened
+                triggerIsPullRequest) {
+                    if (((_d = github.context.payload.pull_request) === null || _d === void 0 ? void 0 : _d.draft) &&
+                        statusFieldValueWhenDraftPRIsOpened) {
+                        yield setStatus({ fieldValue: statusFieldValueWhenDraftPRIsOpened });
+                    }
+                    else if (statusFieldValueWhenPRReadyForReviewIsOpened) {
+                        yield setStatus({
+                            fieldValue: statusFieldValueWhenPRReadyForReviewIsOpened
+                        });
+                    }
                 }
                 else if (
                 // this is expected to run on pushes to `main` (aka a merged pull request)
                 triggerIsPushToMain &&
                     statusFieldValueForMergedCommitToMain) {
-                    const enumOption = (_e = statusCustomField.enum_options) === null || _e === void 0 ? void 0 : _e.find(option => option.name === statusFieldValueForMergedCommitToMain);
-                    if (!enumOption) {
-                        core.info(`🛑 didn't find enum option called ${statusFieldValueForMergedCommitToMain} on status field ${JSON.stringify(statusCustomField)} for this task`);
-                        continue;
-                    }
-                    yield client.tasks.update(taskID, {
-                        custom_fields: {
-                            // GID of the "📖 In Code Review" option
-                            [statusCustomField.gid]: enumOption.gid
-                        }
+                    yield setStatus({
+                        fieldValue: statusFieldValueForMergedCommitToMain
                     });
                 }
             }
@@ -370,7 +378,6 @@ function run() {
             if (error instanceof Error) {
                 core.error(error);
                 core.setFailed(error.message);
-                console.error(JSON.stringify(error));
             }
         }
     });
