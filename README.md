@@ -15,8 +15,9 @@ Save your changes and commit the build artifacts:
 
 ```
 nvm use
-yarn build
-yarn package
+npm install
+npm run build
+npm run package
 git add -A
 git commit
 git push origin main
