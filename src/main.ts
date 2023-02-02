@@ -44,7 +44,13 @@ async function run(): Promise<void> {
   try {
     core.info(`Triggered by event name: ${github.context.eventName}`)
 
-    const body = github.context.payload.pull_request?.body
+    const triggerIsPROpenedOrReopened =
+      github.context.eventName === 'pull_request'
+    const triggerIsPushToMain = github.context.eventName === 'push'
+
+    const body = triggerIsPROpenedOrReopened
+      ? github.context.payload.pull_request?.body
+      : github.context.payload.commits?.[0]?.message
     if (!body) {
       core.info(`🛑 couldn't find PR body`)
       return
@@ -324,7 +330,7 @@ async function run(): Promise<void> {
 
       if (
         // this is expected to run upon PRs being opened or reopened
-        github.context.eventName === 'pull_request' &&
+        triggerIsPROpenedOrReopened &&
         statusFieldValueForInCodeReview
       ) {
         const enumOption = statusCustomField.enum_options?.find(
@@ -346,7 +352,7 @@ async function run(): Promise<void> {
         })
       } else if (
         // this is expected to run on pushes to `main` (aka a merged pull request)
-        github.context.eventName === 'push' &&
+        triggerIsPushToMain &&
         statusFieldValueForMergedCommitToMain
       ) {
         const enumOption = statusCustomField.enum_options?.find(

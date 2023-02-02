@@ -34,22 +34,24 @@ Include a Github Workflow file in the respective repo:
 .github/workflows/auto-update-asana-custom-field.yml
 
 ```
-name: Auto-merge main into open Pull Requests
+name: Asana Status
 
 on:
+  pull_request:
+    types: [opened, reopened]
   push:
     branches:
       - "main"
 
 jobs:
   auto-merge-main-into-open-pull-requests:
-    name: Auto-merge main into open Pull Requests
+    name: Update
     runs-on: "ubuntu-latest"
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
-      - name: Auto-merge main into open Pull Requests
+      - name: Update Asana Status
         uses: "sprucehealth/auto-update-asana-custom-field-action@latest"
         with:
           mainBranchName: main

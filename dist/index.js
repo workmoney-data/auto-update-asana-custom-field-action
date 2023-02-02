@@ -68,11 +68,15 @@ function getAsanaTaskGIDsFromText(text) {
     return allUniqueAsanaGIDsSorted;
 }
 function run() {
-    var _a, _b, _c;
+    var _a, _b, _c, _d, _e;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             core.info(`Triggered by event name: ${github.context.eventName}`);
-            const body = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.body;
+            const triggerIsPROpenedOrReopened = github.context.eventName === 'pull_request';
+            const triggerIsPushToMain = github.context.eventName === 'push';
+            const body = triggerIsPROpenedOrReopened
+                ? (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.body
+                : (_c = (_b = github.context.payload.commits) === null || _b === void 0 ? void 0 : _b[0]) === null || _c === void 0 ? void 0 : _c.message;
             if (!body) {
                 core.info(`🛑 couldn't find PR body`);
                 return;
@@ -330,9 +334,9 @@ function run() {
                 }
                 if (
                 // this is expected to run upon PRs being opened or reopened
-                github.context.eventName === 'pull_request' &&
+                triggerIsPROpenedOrReopened &&
                     statusFieldValueForInCodeReview) {
-                    const enumOption = (_b = statusCustomField.enum_options) === null || _b === void 0 ? void 0 : _b.find(option => option.name === statusFieldValueForInCodeReview);
+                    const enumOption = (_d = statusCustomField.enum_options) === null || _d === void 0 ? void 0 : _d.find(option => option.name === statusFieldValueForInCodeReview);
                     if (!enumOption) {
                         core.info(`🛑 didn't find enum option called ${statusFieldValueForInCodeReview} on status field ${JSON.stringify(statusCustomField)} for this task`);
                         continue;
@@ -346,9 +350,9 @@ function run() {
                 }
                 else if (
                 // this is expected to run on pushes to `main` (aka a merged pull request)
-                github.context.eventName === 'push' &&
+                triggerIsPushToMain &&
                     statusFieldValueForMergedCommitToMain) {
-                    const enumOption = (_c = statusCustomField.enum_options) === null || _c === void 0 ? void 0 : _c.find(option => option.name === statusFieldValueForMergedCommitToMain);
+                    const enumOption = (_e = statusCustomField.enum_options) === null || _e === void 0 ? void 0 : _e.find(option => option.name === statusFieldValueForMergedCommitToMain);
                     if (!enumOption) {
                         core.info(`🛑 didn't find enum option called ${statusFieldValueForMergedCommitToMain} on status field ${JSON.stringify(statusCustomField)} for this task`);
                         continue;
