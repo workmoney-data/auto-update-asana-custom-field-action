@@ -2,7 +2,10 @@
 
 ## What does this do?
 
-The idea here is for this to be an incremental part of Mergie, rather than rewrite the existing Mergie functionality. For now, this will be the part that automatically merges `main` to `test*` branches that have active, non-draft PRs.
+This updates a custom field in Asana called Status when the following happen:
+
+- PR merged (or any other push to main, for that matter)
+- PR opened or reopened
 
 ## Development of this Github Action
 
@@ -27,7 +30,7 @@ _Make sure to allow Github Actions from the respective repo you want this Github
 
 Include a Github Workflow file in the respective repo:
 
-.github/workflows/auto-merge-main-into-pull-requests.yml
+.github/workflows/auto-update-asana-custom-field.yml
 
 ```
 name: Auto-merge main into open Pull Requests
@@ -46,13 +49,11 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
       - name: Auto-merge main into open Pull Requests
-        uses: "sprucehealth/auto-merge-main-into-pull-requests-action@latest"
+        uses: "sprucehealth/auto-update-asana-custom-field-action@latest"
         with:
           mainBranchName: main
-          waitMilliseconds: 500
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-          onlyMergeMainForDraftPullRequests: false
-          onlyPullRequestsWithLabels: TEST_ENVIRONMENT
-          skipPullRequestsWithLabels: DONT_SYNC_MAIN
-
+          asanaToken: ${{ secrets.ASANA_TOKEN }}
+          statusFieldName: "Status"
+          statusFieldValueForInCodeReview: "📖 In Code Review"
+          statusFieldValueForMergedCommitToMain: "ᛦ Merged"
 ```
