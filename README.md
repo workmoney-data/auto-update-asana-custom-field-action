@@ -14,8 +14,7 @@ Use Github Codespaces to develop this in-browser. There's an existing codespace 
 Save your changes and commit the build artifacts:
 
 ```
-nvm use && npm install
-npm run build
+nvm use && npm install &&npm run build
 npm run package
 git add -A
 git commit
