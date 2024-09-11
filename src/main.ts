@@ -67,7 +67,13 @@ export async function run(): Promise<void> {
       github.context.payload.pull_request?.body ?? github.context.payload.commits?.[0]?.message;
     if (!body) {
       // core.info(`ℹ️ github.context: ${JSON.stringify(github.context)}`);
-      core.info(`ℹ️ github.context.payload: ${JSON.stringify(github.context.payload)}`);
+      core.info(
+        `ℹ️ github.context.payload.pull_request: ${JSON.stringify(
+          github.context.payload.pull_request,
+          null,
+          2
+        )}`
+      );
       core.info(`🛑 couldn't find PR body`);
       return;
     }
