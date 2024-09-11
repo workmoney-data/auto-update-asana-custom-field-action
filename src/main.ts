@@ -63,9 +63,8 @@ export async function run(): Promise<void> {
 
     const triggerIsPullRequest = github.context.eventName === 'pull_request';
 
-    const body = triggerIsPullRequest
-      ? github.context.payload.pull_request?.body
-      : github.context.payload.commits?.[0]?.message;
+    const body =
+      github.context.payload.pull_request?.body ?? github.context.payload.commits?.[0]?.message;
     if (!body) {
       core.info(`ℹ️ github.context: ${JSON.stringify(github.context)}`);
       core.info(`🛑 couldn't find PR body`);
@@ -148,16 +147,13 @@ export async function run(): Promise<void> {
         });
         const reviews = reviewsData.data;
 
-        const latestReviews = (reviews ?? []).reduce(
-          (acc, review) => {
-            if (!review.user) {
-              return acc;
-            }
-            acc[review.user.login] = review;
+        const latestReviews = (reviews ?? []).reduce((acc, review) => {
+          if (!review.user) {
             return acc;
-          },
-          {} as Record<string, (typeof reviews)[number]>
-        );
+          }
+          acc[review.user.login] = review;
+          return acc;
+        }, {} as Record<string, typeof reviews[number]>);
 
         const latestReviewsArray = Object.values(latestReviews || {});
         core.info(`🔍 latestReviewsArray: ${JSON.stringify(latestReviewsArray)}`);
