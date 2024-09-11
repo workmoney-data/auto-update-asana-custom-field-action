@@ -66,10 +66,10 @@ async function run() {
         }
         const triggerIsPushToMain = github.context.eventName === 'push' && github.context.ref === `refs/heads/${mainBranchName}`;
         const triggerIsPullRequest = github.context.eventName === 'pull_request';
-        const body = triggerIsPullRequest
-            ? github.context.payload.pull_request?.body
-            : github.context.payload.commits?.[0]?.message;
+        const body = github.context.payload.pull_request?.body ?? github.context.payload.commits?.[0]?.message;
         if (!body) {
+            // core.info(`ℹ️ github.context: ${JSON.stringify(github.context)}`);
+            core.info(`ℹ️ github.context.payload.pull_request: ${JSON.stringify(github.context.payload.pull_request, null, 2)}`);
             core.info(`🛑 couldn't find PR body`);
             return;
         }
