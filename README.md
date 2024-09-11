@@ -50,8 +50,10 @@ jobs:
         with:
           mainBranchName: main
           asanaToken: ${{ secrets.ASANA_TOKEN }}
+          githubToken: ${{ github.token }}
           statusFieldName: "Status"
           statusFieldValueWhenDraftPRIsOpen: "📖 In Code Review"
           statusFieldValueWhenPRReadyForReviewIsOpen: "✏️ In Development"
+          statusFieldValueWhenPRReadyForReviewIsApproved: "✅ Approved"
           statusFieldValueForMergedCommitToMain: "ᛦ Merged"
 ```
