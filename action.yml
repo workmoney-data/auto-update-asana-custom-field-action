@@ -10,6 +10,10 @@ inputs:
     required: true
     description: 'an Asana token with access to the projects and tasks you want to update'
     default: ''
+  githubToken:
+    required: true
+    description: 'GitHub token for authentication and API access'
+    default: ''
   statusFieldName:
     required: false
     description: 'if specified, this custom field will be set automatically when a PR is opened or merged'
@@ -26,7 +30,14 @@ inputs:
     required: false
     description: 'if specified, the statusFieldName will be set to the enum of this value when a PR is merged into main (or any other commit is pushed to main, for that matter). This should be the name of the enum value, as it appears in the Asana UI (as opposed to the GID or some other identifier).'
     default: ''
-
+  statusFieldValueWhenPRReadyForReviewIsApproved:
+    required: false
+    description: 'if specified, the statusFieldName will be set to the enum of this value when a PR is approved and ready for review. This should be the name of the enum value, as it appears in the Asana UI (as opposed to the GID or some other identifier).'
+    default: ''
+  skipSettingStatusForPRReadyForReviewIsApprovedIfLabeledWith:
+    required: false
+    description: 'A comma-separated list of labels. If the PR has any of these labels, the status will not be set to the "approved" value even if the PR is approved.'
+    default: ''
 runs:
-  using: 'node16'
+  using: 'node20'
   main: 'dist/index.js'
