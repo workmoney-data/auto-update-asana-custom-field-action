@@ -38,6 +38,10 @@ inputs:
     required: false
     description: 'A comma-separated list of labels. If the PR has any of these labels, the status will not be set to the "approved" value even if the PR is approved.'
     default: ''
+  labelToApplyToPRWhenApproved:
+    required: false
+    description: 'If specified, the PR will be labeled with this value when the status is updated to the value of `statusFieldValueWhenPRReadyForReviewIsApproved`.'
+    default: ''
 runs:
   using: 'node20'
   main: 'dist/index.js'
