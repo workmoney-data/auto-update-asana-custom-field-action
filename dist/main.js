@@ -83,6 +83,7 @@ async function run() {
             .split(',')
             .map((label) => label.trim())
             .filter(Boolean);
+        const labelToApplyToPRWhenApproved = core.getInput('labelToApplyToPRWhenApproved');
         const taskIDs = (0, getAsanaTaskGIDsFromText_1.getAsanaTaskGIDsFromText)(body);
         for (const taskID of taskIDs) {
             core.info(`🎬 Attempting to update mentioned task ${taskID}`);
@@ -109,21 +110,23 @@ async function run() {
                     core.info(`🛑 couldn't find PR number`);
                     return;
                 }
-                let pr = null;
-                // Fetch PR details
-                const prData = await octokit.pulls.get({
+                const prResponse = await octokit.pulls.get({
                     owner: github.context.repo.owner,
                     repo: github.context.repo.repo,
                     pull_number: prNumber,
                 });
-                pr = prData.data;
-                // Fetch PR reviews
-                const reviewsData = await octokit.pulls.listReviews({
+                const pr = prResponse.data;
+                const isMerged = pr?.merged_at !== undefined;
+                if (isMerged) {
+                    core.info(`🔍 PR is merged, returning early`);
+                    return;
+                }
+                const reviewsResponse = await octokit.pulls.listReviews({
                     owner: github.context.repo.owner,
                     repo: github.context.repo.repo,
                     pull_number: prNumber,
                 });
-                const reviews = reviewsData.data;
+                const reviews = reviewsResponse.data;
                 const latestReviews = (reviews ?? []).reduce((acc, review) => {
                     if (!review.user) {
                         return acc;
@@ -135,21 +138,29 @@ async function run() {
                 core.info(`🔍 latestReviewsArray: ${JSON.stringify(latestReviewsArray)}`);
                 const isApproved = latestReviewsArray.some((review) => review.state === 'APPROVED') ?? false;
                 const isReadyForReview = pr ? !pr.draft : true; // Assume ready for review if PR details not available
-                const hasSkipLabel = pr?.labels?.some((label) => skipSettingStatusForPRReadyForReviewIsApprovedIfLabeledWith.includes(label.name)) ?? false;
+                const hasSkipSettingStatusForPRApprovedLabel = pr?.labels?.some((label) => skipSettingStatusForPRReadyForReviewIsApprovedIfLabeledWith.includes(label.name)) ?? false;
                 core.info(`🔍 isApproved: ${isApproved}`);
                 core.info(`🔍 isReadyForReview: ${isReadyForReview}`);
-                core.info(`🔍 hasSkipLabel: ${hasSkipLabel}`);
+                core.info(`🔍 hasSkipSettingStatusForPRApprovedLabel: ${hasSkipSettingStatusForPRApprovedLabel}`);
                 core.info(`🔍 statusFieldValueWhenPRReadyForReviewIsApproved: ${statusFieldValueWhenPRReadyForReviewIsApproved}`);
-                if (isApproved &&
-                    isReadyForReview &&
-                    statusFieldValueWhenPRReadyForReviewIsApproved &&
-                    !hasSkipLabel) {
-                    await setStatusFieldvalueForAsanaTask({
-                        fieldValue: statusFieldValueWhenPRReadyForReviewIsApproved,
-                        taskID,
-                        client,
-                        statusCustomField,
-                    });
+                if (isApproved && isReadyForReview) {
+                    if (skipSettingStatusForPRReadyForReviewIsApprovedIfLabeledWith.length > 0 &&
+                        !hasSkipSettingStatusForPRApprovedLabel) {
+                        await setStatusFieldvalueForAsanaTask({
+                            fieldValue: statusFieldValueWhenPRReadyForReviewIsApproved,
+                            taskID,
+                            client,
+                            statusCustomField,
+                        });
+                    }
+                    if (labelToApplyToPRWhenApproved) {
+                        await octokit.issues.addLabels({
+                            owner: github.context.repo.owner,
+                            repo: github.context.repo.repo,
+                            issue_number: prNumber,
+                            labels: [labelToApplyToPRWhenApproved],
+                        });
+                    }
                 }
                 else if (pr?.draft && statusFieldValueWhenDraftPRIsOpen) {
                     await setStatusFieldvalueForAsanaTask({
