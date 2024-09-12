@@ -116,7 +116,7 @@ async function run() {
                     pull_number: prNumber,
                 });
                 const pr = prResponse.data;
-                const isMerged = pr?.merged_at !== undefined;
+                const isMerged = !!pr?.merged_at;
                 if (isMerged) {
                     core.info(`🔍 PR is merged, returning early`);
                     return;
