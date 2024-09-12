@@ -127,16 +127,15 @@ async function run() {
                     pull_number: prNumber,
                 });
                 const reviews = reviewsResponse.data;
-                const latestReviews = (reviews ?? []).reduce((acc, review) => {
+                const latestReviewByEachReviewer = (reviews ?? []).reduce((acc, review) => {
                     if (!review.user) {
                         return acc;
                     }
                     acc[review.user.login] = review;
                     return acc;
                 }, {});
-                const latestReviewsArray = Object.values(latestReviews || {});
-                core.info(`🔍 latestReviewsArray: ${JSON.stringify(latestReviewsArray)}`);
-                const isApproved = latestReviewsArray.some((review) => review.state === 'APPROVED') ?? false;
+                core.info(`🔍 latestReviewByEachReviewer: ${JSON.stringify(latestReviewByEachReviewer)}`);
+                const isApproved = Object.values(latestReviewByEachReviewer || {}).some((review) => review.state === 'APPROVED') ?? false;
                 const isReadyForReview = pr ? !pr.draft : true; // Assume ready for review if PR details not available
                 const hasSkipSettingStatusForPRApprovedLabel = pr?.labels?.some((label) => skipSettingStatusForPRReadyForReviewIsApprovedIfLabeledWith.includes(label.name)) ?? false;
                 core.info(`🔍 isApproved: ${isApproved}`);

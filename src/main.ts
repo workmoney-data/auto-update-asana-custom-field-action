@@ -151,7 +151,7 @@ export async function run(): Promise<void> {
         });
         const reviews = reviewsResponse.data;
 
-        const latestReviews = (reviews ?? []).reduce(
+        const latestReviewByEachReviewer = (reviews ?? []).reduce(
           (acc, review) => {
             if (!review.user) {
               return acc;
@@ -161,12 +161,12 @@ export async function run(): Promise<void> {
           },
           {} as Record<string, (typeof reviews)[number]>
         );
-
-        const latestReviewsArray = Object.values(latestReviews || {});
-        core.info(`🔍 latestReviewsArray: ${JSON.stringify(latestReviewsArray)}`);
+        core.info(`🔍 latestReviewByEachReviewer: ${JSON.stringify(latestReviewByEachReviewer)}`);
 
         const isApproved =
-          latestReviewsArray.some((review) => review.state === 'APPROVED') ?? false;
+          Object.values(latestReviewByEachReviewer || {}).some(
+            (review) => review.state === 'APPROVED'
+          ) ?? false;
         const isReadyForReview = pr ? !pr.draft : true; // Assume ready for review if PR details not available
         const hasSkipSettingStatusForPRApprovedLabel =
           pr?.labels?.some((label) =>
