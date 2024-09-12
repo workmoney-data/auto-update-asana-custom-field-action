@@ -2,22 +2,22 @@
 
 ## What does this do?
 
-This updates a custom field in Asana called Status when the following happen:
+This GitHub Action updates a custom field in Asana called "Status" based on specific events related to pull requests (PRs). The updates occur under the following conditions:
 
-- PR merged (or any other push to main, for that matter)
-- PR opened or reopened
+- When a PR is merged (or any other push to the main branch).
+- When a PR is opened or reopened.
 
-## Development of this Github Action
+## Development of this GitHub Action
 
-Use Github Codespaces to develop this in-browser. There's an existing codespace already set up.
+Use GitHub Codespaces to develop this in-browser. There's an existing codespace already set up.
 
 Save your changes and commit the build artifacts:
 
 ```
-nvm use && npm install &&npm run build && npm run package && git add -A && git commit && git push origin main
+nvm use && npm install && npm run build && npm run package && git add -A && git commit && git push origin main
 ```
 
-Upon pushing, you'll trigger an automatic release
+Upon pushing to any branch, you'll trigger an automatic release
 
 ## Using this Github Action from another repo
 
@@ -56,4 +56,6 @@ jobs:
           statusFieldValueWhenPRReadyForReviewIsOpen: "✏️ In Development"
           statusFieldValueWhenPRReadyForReviewIsApproved: "✅ Approved"
           statusFieldValueForMergedCommitToMain: "ᛦ Merged"
+          labelToApplyToPRWhenApproved: "QA_PENDING"
+
 ```
