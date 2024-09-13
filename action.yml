@@ -45,10 +45,8 @@ inputs:
 outputs:
   didSetStatus:
     description: 'true if the status was set, false or undefined if not set'
-    type: boolean
   statusFieldValue:
     description: 'the value of the status field that was set, or undefined if not set'
-    type: string
 runs:
   using: 'node20'
   main: 'dist/index.js'
