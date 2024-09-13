@@ -178,6 +178,8 @@ async function run() {
                         statusCustomField,
                     });
                 }
+                core.setOutput('didSetStatus', 'true');
+                core.setOutput('statusFieldValue', statusFieldValueWhenPRReadyForReviewIsOpen);
             }
             else if (
             // this is expected to run on pushes to `main` (aka a merged pull request)
@@ -190,6 +192,8 @@ async function run() {
                     client,
                     statusCustomField,
                 });
+                core.setOutput('didSetStatus', 'true');
+                core.setOutput('statusFieldValue', statusFieldValueForMergedCommitToMain);
             }
         }
     }
