@@ -143,11 +143,13 @@ async function run() {
                 core.info(`🔍 isReadyForReview: ${isReadyForReview}`);
                 core.info(`🔍 hasSkipSettingStatusForPRApprovedLabel: ${hasSkipSettingStatusForPRApprovedLabel}`);
                 core.info(`🔍 statusFieldValueWhenPRReadyForReviewIsApproved: ${statusFieldValueWhenPRReadyForReviewIsApproved}`);
+                let fieldValue = '';
                 if (isApproved && isReadyForReview) {
                     if (skipSettingStatusForPRReadyForReviewIsApprovedIfLabeledWith.length > 0 &&
                         !hasSkipSettingStatusForPRApprovedLabel) {
+                        fieldValue = statusFieldValueWhenPRReadyForReviewIsApproved;
                         await setStatusFieldvalueForAsanaTask({
-                            fieldValue: statusFieldValueWhenPRReadyForReviewIsApproved,
+                            fieldValue,
                             taskID,
                             client,
                             statusCustomField,
@@ -163,37 +165,40 @@ async function run() {
                     }
                 }
                 else if (pr?.draft && statusFieldValueWhenDraftPRIsOpen) {
+                    fieldValue = statusFieldValueWhenDraftPRIsOpen;
                     await setStatusFieldvalueForAsanaTask({
-                        fieldValue: statusFieldValueWhenDraftPRIsOpen,
+                        fieldValue,
                         taskID,
                         client,
                         statusCustomField,
                     });
                 }
                 else if (statusFieldValueWhenPRReadyForReviewIsOpen) {
+                    fieldValue = statusFieldValueWhenPRReadyForReviewIsOpen;
                     await setStatusFieldvalueForAsanaTask({
-                        fieldValue: statusFieldValueWhenPRReadyForReviewIsOpen,
+                        fieldValue,
                         taskID,
                         client,
                         statusCustomField,
                     });
                 }
                 core.setOutput('didSetStatus', 'true');
-                core.setOutput('statusFieldValue', statusFieldValueWhenPRReadyForReviewIsOpen);
+                core.setOutput('statusFieldValue', fieldValue);
             }
             else if (
             // this is expected to run on pushes to `main` (aka a merged pull request)
             triggerIsPushToMain &&
                 statusFieldValueForMergedCommitToMain) {
                 core.info(`🔍 triggerIsPushToMain`);
+                let fieldValue = statusFieldValueForMergedCommitToMain;
                 await setStatusFieldvalueForAsanaTask({
-                    fieldValue: statusFieldValueForMergedCommitToMain,
+                    fieldValue,
                     taskID,
                     client,
                     statusCustomField,
                 });
                 core.setOutput('didSetStatus', 'true');
-                core.setOutput('statusFieldValue', statusFieldValueForMergedCommitToMain);
+                core.setOutput('statusFieldValue', fieldValue);
             }
         }
     }
