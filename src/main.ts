@@ -122,6 +122,8 @@ export async function run(): Promise<void> {
         continue;
       }
 
+      let fieldValue = '';
+
       if (
         // this is expected to run upon PRs being opened or reopened
         triggerIsPullRequest
@@ -189,12 +191,7 @@ export async function run(): Promise<void> {
             skipSettingStatusForPRReadyForReviewIsApprovedIfLabeledWith.length > 0 &&
             !hasSkipSettingStatusForPRApprovedLabel
           ) {
-            await setStatusFieldvalueForAsanaTask({
-              fieldValue: statusFieldValueWhenPRReadyForReviewIsApproved,
-              taskID,
-              client,
-              statusCustomField,
-            });
+            fieldValue = statusFieldValueWhenPRReadyForReviewIsApproved;
           }
           if (labelToApplyToPRWhenApproved) {
             await octokit.issues.addLabels({
@@ -205,19 +202,9 @@ export async function run(): Promise<void> {
             });
           }
         } else if (pr?.draft && statusFieldValueWhenDraftPRIsOpen) {
-          await setStatusFieldvalueForAsanaTask({
-            fieldValue: statusFieldValueWhenDraftPRIsOpen,
-            taskID,
-            client,
-            statusCustomField,
-          });
+          fieldValue = statusFieldValueWhenDraftPRIsOpen;
         } else if (statusFieldValueWhenPRReadyForReviewIsOpen) {
-          await setStatusFieldvalueForAsanaTask({
-            fieldValue: statusFieldValueWhenPRReadyForReviewIsOpen,
-            taskID,
-            client,
-            statusCustomField,
-          });
+          fieldValue = statusFieldValueWhenPRReadyForReviewIsOpen;
         }
       } else if (
         // this is expected to run on pushes to `main` (aka a merged pull request)
@@ -225,12 +212,20 @@ export async function run(): Promise<void> {
         statusFieldValueForMergedCommitToMain
       ) {
         core.info(`🔍 triggerIsPushToMain`);
+        fieldValue = statusFieldValueForMergedCommitToMain;
+      }
+
+      if (fieldValue) {
         await setStatusFieldvalueForAsanaTask({
-          fieldValue: statusFieldValueForMergedCommitToMain,
+          fieldValue,
           taskID,
           client,
           statusCustomField,
         });
+        core.setOutput('didSetStatus', 'true');
+        core.setOutput('statusFieldValue', fieldValue);
+      } else {
+        core.setOutput('didSetStatus', 'false');
       }
     }
   } catch (error) {

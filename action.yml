@@ -42,6 +42,11 @@ inputs:
     required: false
     description: 'If specified, the PR will be labeled with this value when the status is updated to the value of `statusFieldValueWhenPRReadyForReviewIsApproved`.'
     default: ''
+outputs:
+  didSetStatus:
+    description: 'true if the status was set, false or undefined if not set'
+  statusFieldValue:
+    description: 'the value of the status field that was set, or undefined if not set'
 runs:
   using: 'node20'
   main: 'dist/index.js'
