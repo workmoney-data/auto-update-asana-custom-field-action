@@ -65,7 +65,8 @@ async function run() {
             throw new Error(`🛑 couldn't find Asana access token`);
         }
         const triggerIsPushToMain = github.context.eventName === 'push' && github.context.ref === `refs/heads/${mainBranchName}`;
-        const triggerIsPullRequest = github.context.eventName === 'pull_request';
+        const triggerIsPullRequest = github.context.eventName === 'pull_request' ||
+            github.context.eventName === 'pull_request_review';
         const body = github.context.payload.pull_request?.body ?? github.context.payload.commits?.[0]?.message;
         if (!body) {
             // core.info(`ℹ️ github.context: ${JSON.stringify(github.context)}`);

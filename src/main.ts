@@ -61,7 +61,9 @@ export async function run(): Promise<void> {
     const triggerIsPushToMain =
       github.context.eventName === 'push' && github.context.ref === `refs/heads/${mainBranchName}`;
 
-    const triggerIsPullRequest = github.context.eventName === 'pull_request';
+    const triggerIsPullRequest =
+      github.context.eventName === 'pull_request' ||
+      github.context.eventName === 'pull_request_review';
 
     const body =
       github.context.payload.pull_request?.body ?? github.context.payload.commits?.[0]?.message;
