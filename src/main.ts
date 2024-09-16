@@ -41,6 +41,12 @@ const setStatusFieldvalueForAsanaTask = async ({
   return { didSetStatus: true };
 };
 
+const dontUpdateStatusFieldWhenReviewIsApprovedIfStatusFieldValueIsCurrentlyOneOf: string[] = core
+  .getInput('dontUpdateStatusFieldWhenReviewIsApprovedIfStatusFieldValueIsCurrentlyOneOf')
+  .split(',')
+  .map((value) => value.trim())
+  .filter(Boolean);
+
 export async function run(): Promise<void> {
   try {
     core.info(`Triggered by event name: ${github.context.eventName}`);
@@ -123,6 +129,7 @@ export async function run(): Promise<void> {
       }
 
       let fieldValue = '';
+      let shouldSkipUpdatingStatusField = false;
 
       if (
         // this is expected to run upon PRs being opened or reopened
@@ -187,19 +194,35 @@ export async function run(): Promise<void> {
         );
 
         if (isApproved && isReadyForReview) {
-          if (
-            skipSettingStatusForPRReadyForReviewIsApprovedIfLabeledWith.length > 0 &&
-            !hasSkipSettingStatusForPRApprovedLabel
-          ) {
+          core.info(`🔍 Checking if current status field value allows update`);
+
+          // Fetch the current status field value
+          const currentStatusFieldValue = statusCustomField.display_value || '';
+
+          core.info(`🔍 Current status field value: "${currentStatusFieldValue}"`);
+
+          // Check if the current value is in the skip list
+          shouldSkipUpdatingStatusField =
+            dontUpdateStatusFieldWhenReviewIsApprovedIfStatusFieldValueIsCurrentlyOneOf.includes(
+              currentStatusFieldValue
+            );
+
+          if (shouldSkipUpdatingStatusField) {
+            core.info(
+              `🛑 Current status field value "${currentStatusFieldValue}" is in the skip list. Skipping status update.`
+            );
+          } else {
             fieldValue = statusFieldValueWhenPRReadyForReviewIsApproved;
-          }
-          if (labelToApplyToPRWhenApproved) {
-            await octokit.issues.addLabels({
-              owner: github.context.repo.owner,
-              repo: github.context.repo.repo,
-              issue_number: prNumber,
-              labels: [labelToApplyToPRWhenApproved],
-            });
+
+            // Apply label if specified
+            if (labelToApplyToPRWhenApproved) {
+              await octokit.issues.addLabels({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                issue_number: prNumber,
+                labels: [labelToApplyToPRWhenApproved],
+              });
+            }
           }
         } else if (pr?.draft && statusFieldValueWhenDraftPRIsOpen) {
           fieldValue = statusFieldValueWhenDraftPRIsOpen;
@@ -215,7 +238,7 @@ export async function run(): Promise<void> {
         fieldValue = statusFieldValueForMergedCommitToMain;
       }
 
-      if (fieldValue) {
+      if (fieldValue && !shouldSkipUpdatingStatusField) {
         await setStatusFieldvalueForAsanaTask({
           fieldValue,
           taskID,
