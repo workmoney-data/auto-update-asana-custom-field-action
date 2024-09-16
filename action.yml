@@ -30,6 +30,10 @@ inputs:
     required: false
     description: 'if specified, the statusFieldName will be set to the enum of this value when a PR is merged into main (or any other commit is pushed to main, for that matter). This should be the name of the enum value, as it appears in the Asana UI (as opposed to the GID or some other identifier).'
     default: ''
+  dontUpdateStatusFieldWhenReviewIsApprovedIfStatusFieldValueIsCurrentlyOneOf:
+    required: false
+    description: 'A comma-separated list of status field values. If the status field is currently set to one of these values, the status field will not be updated when a PR is approved.'
+    default: ''
   statusFieldValueWhenPRReadyForReviewIsApproved:
     required: false
     description: 'if specified, the statusFieldName will be set to the enum of this value when a PR is approved and ready for review. This should be the name of the enum value, as it appears in the Asana UI (as opposed to the GID or some other identifier).'
