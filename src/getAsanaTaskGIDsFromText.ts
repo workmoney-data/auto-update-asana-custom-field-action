@@ -4,26 +4,25 @@ export function getAsanaTaskGIDsFromText(text: string): string[] {
     .split('\r\n')
     .flatMap((line) => line.split('\n'))
     .flatMap((line) => {
-      // Try to match the old V0 format first
-      let match = line.match(
-        /https:\/\/app.asana.com(?:\/(?:[0-9]+|board|search|inbox))+(?:\/(?<taskGID>[0-9]+))+/
-      );
+      // Match task URLs with /task/{id} format first (most reliable)
+      let match = line.match(/https:\/\/app.asana.com(?:.*?)\/(?:task|item)\/(?<taskGID>\d+)/);
 
-      // If no match found, try the new V1 format
+      // If no match, try the old V0 format as fallback
       if (!match) {
-        // Match new V1 URL formats like:
-        // https://app.asana.com/1/<workspace_id>/project/<project_id>/task/<task_id>
-        // https://app.asana.com/1/<workspace_id>/task/<task_id>
-        // https://app.asana.com/home/task/<task_id>
-        // https://app.asana.com/project/<project_id>/task/<task_id>
         match = line.match(
-          /https:\/\/app.asana.com(?:\/\d+\/\d+)?(?:\/(?:project|home)(?:\/\d+)?)?(?:\/task\/(?<taskGID>\d+))/
+          /https:\/\/app.asana.com(?:\/(?:[0-9]+|board|search|inbox))+(?:\/(?<taskGID>[0-9]+))+/
         );
 
-        // Also try to match item format: /inbox/<domainUser_id>/item/<item_id>
-        if (!match) {
-          match = line.match(/https:\/\/app.asana.com\/inbox\/\d+\/item\/(?<taskGID>\d+)/);
+        // For V0 format we need to make sure we're not matching workspace/project IDs
+        // Only use this if we can't find a /task/ pattern in the URL
+        if (match && line.includes('/task/')) {
+          match = null; // Reset match as it's likely a workspace ID in a task URL
         }
+      }
+
+      // Also try to match item format: /inbox/<domainUser_id>/item/<item_id>
+      if (!match) {
+        match = line.match(/https:\/\/app.asana.com\/inbox\/\d+\/item\/(?<taskGID>\d+)/);
       }
 
       if (!match) {
