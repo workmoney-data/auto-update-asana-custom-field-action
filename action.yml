@@ -14,6 +14,9 @@ inputs:
     required: true
     description: 'GitHub token for authentication and API access'
     default: ''
+  pull-request-description:
+    description: 'Pull request description (optional override). Otherwise it will be retrieved from the workflow context.'
+    required: false
   statusFieldName:
     required: false
     description: 'if specified, this custom field will be set automatically when a PR is opened or merged'

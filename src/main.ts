@@ -71,8 +71,11 @@ export async function run(): Promise<void> {
       github.context.eventName === 'pull_request' ||
       github.context.eventName === 'pull_request_review';
 
+
+    const prDescriptionInput = core.getInput("pull-request-description");
     const body =
-      github.context.payload.pull_request?.body ?? github.context.payload.commits?.[0]?.message;
+      prDescriptionInput ?? github.context.payload.pull_request?.body ?? github.context.payload.commits?.[0]?.message;
+    core.info(`prDescriptionInput: ${prDescriptionInput}`);
     if (!body) {
       // core.info(`ℹ️ github.context: ${JSON.stringify(github.context)}`);
       core.info(
