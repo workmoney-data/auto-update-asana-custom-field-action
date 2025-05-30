@@ -1,3 +1,7 @@
+# Why is this forked?
+
+This is forked to implement the ability to simply pass the values to the action instead of it only being able to read them from the workflow context.
+
 # Auto-update Custom Fields in Linked Asana Tasks
 
 ## What does this do?
