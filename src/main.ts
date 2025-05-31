@@ -64,6 +64,7 @@ export async function run(): Promise<void> {
     if (!asanaToken) {
       throw new Error(`🛑 couldn't find Asana access token`);
     }
+    const headIsMainBranch = github.context.ref === `refs/heads/${mainBranchName}`;
     const triggerIsPushToMain =
       github.context.eventName === 'push' && github.context.ref === `refs/heads/${mainBranchName}`;
 
@@ -154,7 +155,8 @@ export async function run(): Promise<void> {
 
         const isMerged = !!pr?.merged_at;
 
-        if (isMerged && statusFieldValueForMergedCommitToMain) {
+        // updated this to check if the PR is merged and the head branch is the main branch.
+        if (isMerged && headIsMainBranch && statusFieldValueForMergedCommitToMain) {
           fieldValue = statusFieldValueForMergedCommitToMain;
         }
 
