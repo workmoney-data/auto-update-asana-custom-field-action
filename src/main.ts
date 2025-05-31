@@ -153,9 +153,9 @@ export async function run(): Promise<void> {
         const pr = prResponse.data;
 
         const isMerged = !!pr?.merged_at;
-        if (isMerged) {
-          core.info(`🔍 PR is merged, returning early`);
-          return;
+
+        if (isMerged && statusFieldValueForMergedCommitToMain) {
+          fieldValue = statusFieldValueForMergedCommitToMain;
         }
 
         const reviewsResponse = await octokit.pulls.listReviews({
