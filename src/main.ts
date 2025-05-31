@@ -155,11 +155,6 @@ export async function run(): Promise<void> {
 
         const isMerged = !!pr?.merged_at;
 
-        // updated this to check if the PR is merged and the head branch is the main branch.
-        if (isMerged && headIsMainBranch && statusFieldValueForMergedCommitToMain) {
-          fieldValue = statusFieldValueForMergedCommitToMain;
-        }
-
         const reviewsResponse = await octokit.pulls.listReviews({
           owner: github.context.repo.owner,
           repo: github.context.repo.repo,
@@ -218,6 +213,7 @@ export async function run(): Promise<void> {
             );
           } else {
             fieldValue = statusFieldValueWhenPRReadyForReviewIsApproved;
+            core.info(`🔍 fieldValue set to: ${fieldValue}`);
 
             // Apply label if specified
             if (labelToApplyToPRWhenApproved) {
@@ -231,8 +227,14 @@ export async function run(): Promise<void> {
           }
         } else if (pr?.draft && statusFieldValueWhenDraftPRIsOpen) {
           fieldValue = statusFieldValueWhenDraftPRIsOpen;
+          core.info(`🔍 fieldValue set to: ${fieldValue}`);
+        } else if (isMerged && headIsMainBranch && statusFieldValueForMergedCommitToMain) {
+          // updated this to check if the PR is merged and the head branch is the main branch.
+          fieldValue = statusFieldValueForMergedCommitToMain;
+          core.info(`🔍 fieldValue set to: ${fieldValue}`);
         } else if (statusFieldValueWhenPRReadyForReviewIsOpen) {
           fieldValue = statusFieldValueWhenPRReadyForReviewIsOpen;
+          core.info(`🔍 fieldValue set to: ${fieldValue}`);
         }
       } else if (
         // this is expected to run on pushes to `main` (aka a merged pull request)
@@ -241,6 +243,7 @@ export async function run(): Promise<void> {
       ) {
         core.info(`🔍 triggerIsPushToMain`);
         fieldValue = statusFieldValueForMergedCommitToMain;
+        core.info(`🔍 fieldValue set to: ${fieldValue}`);
       }
 
       if (fieldValue && !shouldSkipUpdatingStatusField) {
