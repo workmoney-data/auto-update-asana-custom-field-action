@@ -65,6 +65,7 @@ export async function run(): Promise<void> {
       throw new Error(`🛑 couldn't find Asana access token`);
     }
     const headIsMainBranch = github.context.ref === `refs/heads/${mainBranchName}`;
+    core.info(`🛠debug help🛠 triggerIs: ${github.context.eventName}`);
     const triggerIsPushToMain =
       github.context.eventName === 'push' && github.context.ref === `refs/heads/${mainBranchName}`;
 
@@ -154,6 +155,7 @@ export async function run(): Promise<void> {
         const pr = prResponse.data;
 
         const isMerged = !!pr?.merged_at;
+        core.info(`🛠debug help🛠 isMerged: ${isMerged}`);
 
         const reviewsResponse = await octokit.pulls.listReviews({
           owner: github.context.repo.owner,
