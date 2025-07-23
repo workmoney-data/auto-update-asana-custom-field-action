@@ -193,7 +193,7 @@ export async function run(): Promise<void> {
           `🔍 statusFieldValueWhenPRReadyForReviewIsApproved: ${statusFieldValueWhenPRReadyForReviewIsApproved}`
         );
 
-        if (isApproved && isReadyForReview) {
+        if (isApproved && isReadyForReview && !isMerged) {
           core.info(`🔍 Checking if current status field value allows update`);
 
           // Fetch the current status field value
